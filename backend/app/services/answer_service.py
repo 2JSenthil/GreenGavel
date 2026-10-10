@@ -8,82 +8,55 @@ if str(ROOT) not in sys.path:
 from app.config import DEMO_CACHE
 from app.models import Source
 from app.services.demo_replay import get_demo_answer
-from llm import ask_llm
+from llm import ask_llm, chat_reply, route_question
+from rag import build_context
 from retrieval import retrieve_chunks
 
-
-def _build_context(rows):
-    context_parts = []
-
-    for row in rows:
-        meeting_date = row[0]
-        document_type = row[1]
-        status = row[2]
-        chunk_text = row[3]
-        source_url = row[4]
-
-        context_part = f"""
-Meeting date: {meeting_date}
-Document type: {document_type}
-Status: {status}
-
-Text:
-{chunk_text}
-
-Source:
-{source_url}
-"""
-        context_parts.append(context_part)
-
-    return "\n\n--------------------\n\n".join(context_parts)
+REFUSAL = "The records I have don't say."
 
 
-def _build_sources(rows):
+def map_sources(rows) -> list[Source]:
     sources = []
-    seen_urls = set()
-
     for index, row in enumerate(rows, start=1):
-        source_url = row[4]
-        if not source_url or source_url in seen_urls:
-            continue
-        seen_urls.add(source_url)
-
+        meeting_date, document_type, status, _text, source_url = row[:5]
+        body = str(document_type or "Town Council")
         sources.append(
             Source(
                 id=index,
-                body=row[3],
-                date=row[0],
-                document_name=row[1],
+                body=body,
+                date=str(meeting_date or ""),
+                document_name=body,
                 page=1,
-                pdf_url=source_url,
-                is_draft=str(row[2]).lower() == "draft",
+                pdf_url=source_url or None,
+                is_draft=str(status or "").lower() == "draft",
             )
         )
-
     return sources
+
+
+def prepare_question(question: str):
+    if DEMO_CACHE:
+        demo = get_demo_answer(question)
+        if demo is not None:
+            return "records", demo
+    return route_question(question), None
 
 
 async def generate_answer(
     question: str,
     topic: str | None = None,
+    kind: str = "records",
+    prepared: dict | None = None,
 ):
-    if DEMO_CACHE:
-        result = get_demo_answer(question)
-        if result is not None:
-            return result
+    if prepared is not None:
+        return {**prepared, "kind": "records"}
+
+    if kind == "chat":
+        return {"text": chat_reply(question), "sources": [], "kind": "chat"}
 
     rows = retrieve_chunks(question=question, limit=8)
-
     if not rows:
-        return {
-            "text": "The records I have don't say.",
-            "sources": [],
-        }
+        return {"text": REFUSAL, "sources": [], "kind": "records"}
 
-    context = _build_context(rows)
-    answer_text = ask_llm(question=question, context=context)
-
-    return {
-        "text": answer_text,
-        "sources": _build_sources(rows),
-    }
+    text = ask_llm(question=question, context=build_context(rows))
+    return {"text": text, "sources": map_sources(rows), "kind": "records"}

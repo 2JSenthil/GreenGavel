@@ -5,7 +5,7 @@ from llm import ask_llm
 def build_context(rows):
     """
     Turn retrieved Snowflake rows into a context block
-    that Gemini can use.
+    that the LLM can use.
     """
 
     context_parts = []
@@ -56,7 +56,7 @@ def answer_question(question):
 
     1. Search Snowflake for relevant chunks
     2. Build context from those chunks
-    3. Send context + question to Gemini
+    3. Send context + question to the LLM through OpenRouter
     4. Return answer + sources
     """
 

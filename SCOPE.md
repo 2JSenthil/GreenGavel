@@ -420,6 +420,17 @@ def tts(script):
 - Pre-generate audio for all 10 demo questions during the 7:00 PM test pass and commit the MP3 files, so the demo plays instantly and survives a network failure.
 - Say "ElevenLabs" in the demo video and the Devpost text, and describe the voice as the way a resident who will not open a PDF still hears what the council decided.
 
+### Voice conversation mode (Nice tier)
+
+The user speaks a question and hears the answer, with no typing. The loop is: microphone, speech to text, the existing `POST /api/ask`, then the existing `POST /api/brief` to speak the result. Retrieval and the model need no changes, because they receive the transcribed text as an ordinary typed question.
+
+- **Speech to text.** Version 1 uses the browser Web Speech API: free, no key, about an hour of front-end work, reliable in Chrome and Edge, weaker in Safari. Demo from Chrome. ElevenLabs speech to text is the upgrade for the sponsor track, but its API shape, price, and latency are not verified, so read its docs before committing to it.
+- **Interaction.** A push-to-talk button, not an always-listening microphone, so room noise at the demo does not trigger questions. Show the transcript at once, then a searching state, then play the answer automatically.
+- **Spoken answer.** Two or three sentences that name the source aloud, for example "according to the October 14 agenda". The full written answer and the source cards stay on screen, since audio cannot show citations.
+- **Latency.** The steps run in sequence, so expect several seconds of silence. Hide it with the instant transcript and a searching state, and pre-cache the demo questions so the video take is fast.
+- **Risks.** Place names such as Carrboro may be misheard, so say each demo question aloud and keep the wording that transcribes cleanly. Browsers allow the microphone only on `localhost` or HTTPS. Record the video in a quiet room. Always keep a typed-question fallback.
+- **Build order.** Typed Q&A end to end, then the voice brief, then this. Owner: front end, with a small change on the API so `/api/brief` can take a short script.
+
 ## Work plan
 
 Eight gates lead to a complete Devpost submission at 8:30 AM Sunday, which leaves 90 minutes before the 10:00 AM deadline. Each gate has a pass test, and a missed gate triggers a named cut.

@@ -5,9 +5,12 @@ from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 PROJECT_ROOT = BASE_DIR.parent
+ROOT_DIR = PROJECT_ROOT
 
+load_dotenv(ROOT_DIR / ".env")
 load_dotenv(BASE_DIR / ".env")
 load_dotenv(PROJECT_ROOT / ".env")
+
 
 def _env(name: str, default: str = "") -> str:
     return (os.getenv(name, default) or "").strip()

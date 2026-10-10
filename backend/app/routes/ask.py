@@ -8,7 +8,7 @@ from fastapi.responses import StreamingResponse
 
 from app.config import RETRIEVER
 from app.models import AnswerRecord, AskRequest
-from app.services.answer_service import generate_answer
+from app.services.answer_service import generate_answer, prepare_question
 from app.services.cache import save_answer
 
 router = APIRouter()
@@ -35,16 +35,20 @@ async def ask(request: AskRequest):
                 return
 
             started = time.perf_counter()
+            kind, prepared = prepare_question(question)
+            yield sse_event("route", {"kind": kind})
+
             result = await generate_answer(
                 question,
-                request.topic
+                request.topic,
+                kind,
+                prepared,
             )
 
             sources = result["sources"]
             answer_text = result["text"]
             answer_id = str(uuid.uuid4())
 
-            # Send sources first
             yield sse_event(
                 "sources",
                 {
@@ -55,25 +59,18 @@ async def ask(request: AskRequest):
                 }
             )
 
-            # Stream answer text in chunks
             chunk_size = 35
-
             for i in range(0, len(answer_text), chunk_size):
                 chunk = answer_text[i:i + chunk_size]
-
-                yield sse_event(
-                    "delta",
-                    {"text": chunk}
-                )
-
+                yield sse_event("delta", {"text": chunk})
                 await asyncio.sleep(0.05)
 
-            # Save completed answer
             record = AnswerRecord(
                 answer_id=answer_id,
                 question=question,
                 text=answer_text,
-                sources=sources
+                sources=sources,
+                topic=request.topic,
             )
 
             save_answer(record)
