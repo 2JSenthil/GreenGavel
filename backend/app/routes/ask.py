@@ -1,10 +1,12 @@
 import asyncio
 import json
+import time
 import uuid
 
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 
+from app.config import RETRIEVER
 from app.models import AnswerRecord, AskRequest
 from app.services.answer_service import generate_answer
 from app.services.cache import save_answer
@@ -28,10 +30,11 @@ async def ask(request: AskRequest):
             if not question:
                 yield sse_event(
                     "error",
-                    {"message": "Question cannot be empty."}
+                    {"code": "bad_request", "message": "Question cannot be empty."}
                 )
                 return
 
+            started = time.perf_counter()
             result = await generate_answer(
                 question,
                 request.topic
@@ -75,9 +78,16 @@ async def ask(request: AskRequest):
 
             save_answer(record)
 
+            elapsed_ms = int((time.perf_counter() - started) * 1000)
             yield sse_event(
                 "done",
-                {"answer_id": answer_id}
+                {
+                    "answer_id": answer_id,
+                    "ok": True,
+                    "refused": answer_text == "The records I have don't say.",
+                    "retriever": RETRIEVER,
+                    "ms": elapsed_ms,
+                }
             )
 
         except asyncio.CancelledError:
@@ -87,9 +97,10 @@ async def ask(request: AskRequest):
             yield sse_event(
                 "error",
                 {
+                    "code": "internal_error",
                     "message": (
                         "Unable to generate an answer. "
-                        "Check demo questions or backend configuration."
+                        "Check the connected data source or backend configuration."
                     )
                 }
             )
