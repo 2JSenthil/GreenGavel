@@ -1,10 +1,35 @@
+"use client";
+
 import AskBox from "@/components/AskBox";
 import TopicChips from "@/components/TopicChips";
 import AnswerPanel from "@/components/AnswerPanel";
 import SourceCard from "@/components/SourceCard";
 import FeedStrip from "@/components/FeedStrip";
 
+import { useState } from "react";
+
 export default function Home() {
+  const [question, setQuestion] = useState("");
+  const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
+
+  const handleQuestionChange = (value: string) => {
+    setQuestion(value);
+  };
+
+  const handleToggleTopic = (topic: string) => {
+    setSelectedTopic((previous) =>
+      previous === topic ? null : topic
+    );
+  };
+
+  const handleAsk = () => {
+    if (!question.trim()) return;
+
+    // Backend integration will go here later
+    console.log("Question submitted:", question);
+    console.log("Selected topic:", selectedTopic);
+  };
+  
   return (
     <main className="min-h-screen bg-gradient-to-b from-sky-200 to-green-100 p-6 text-gray-900">
       <div className="mx-auto max-w-6xl space-y-6">
@@ -21,8 +46,16 @@ export default function Home() {
 
         {/* Question and Topics */}
         <section className="space-y-4">
-          <AskBox />
-          <TopicChips />
+          <AskBox
+            question={question}
+            onQuestionChange={handleQuestionChange}
+            onSubmit={handleAsk}
+          />
+
+          <TopicChips
+            selectedTopic={selectedTopic}
+            onToggleTopic={handleToggleTopic}
+          />
         </section>
 
         {/* Answer and Sources */}
