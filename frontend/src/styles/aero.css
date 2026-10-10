@@ -651,10 +651,17 @@ body {
 .task-app .talk-orb,
 .task-app .chat-orb,
 .task-app .records-orb,
+.task-app .preview-orb,
 .task-app .gavel-orb {
   width: 40px;
   height: 40px;
   flex-basis: 40px;
+}
+
+.task-app img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
 }
 
 .task-tray {
@@ -880,12 +887,22 @@ body {
 .source-link {
   display: block;
   margin-top: 2px;
-  font-size: 0.78rem;
   line-height: 1.2;
   white-space: nowrap;
   color: var(--link);
   font-size: 0.9rem;
   font-weight: 700;
+}
+
+button.source-link {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
 }
 
 .draft-badge {
@@ -1030,6 +1047,57 @@ body {
   max-height: none;
 }
 
+.preview-window {
+  position: fixed;
+  z-index: 24;
+  top: 48px;
+  left: 160px;
+  width: min(780px, calc(100vw - 180px));
+  height: min(640px, calc(100dvh - 120px));
+  max-height: calc(100dvh - 120px);
+  display: flex;
+  flex-direction: column;
+  background: #e7f4ff;
+}
+
+.preview-window.glass-panel {
+  background: #e7f4ff;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.preview-window[hidden] {
+  display: none;
+}
+
+.preview-window.preview-placed {
+  right: auto;
+  max-height: none;
+}
+
+.preview-window .window-bar img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.preview-empty {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  color: var(--ink);
+  text-align: center;
+}
+
+.preview-empty p {
+  margin: 0;
+  max-width: 36ch;
+}
+
 .talk-body {
   display: flex;
   flex: 1 1 auto;
@@ -1043,7 +1111,8 @@ body {
 .gavel-orb,
 .chat-orb,
 .talk-orb,
-.records-orb {
+.records-orb,
+.preview-orb {
   display: grid;
   width: 48px;
   height: 48px;
@@ -1069,14 +1138,16 @@ body {
 
 .chat-orb,
 .talk-orb,
-.records-orb {
+.records-orb,
+.preview-orb {
   background:
     radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0) 34%),
     radial-gradient(circle at 50% 62%, #e8f7ff, #4eb4ee 46%, #1583d7);
 }
 
 .chat-mark,
-.records-mark {
+.records-mark,
+.preview-mark {
   width: 52%;
   height: 52%;
 }
@@ -1091,7 +1162,8 @@ body {
 }
 
 .talk-orb-sm,
-.records-orb-sm {
+.records-orb-sm,
+.preview-orb-sm {
   width: 32px;
   height: 32px;
   flex-basis: 32px;
@@ -1617,7 +1689,7 @@ body {
 
 .explorer-panes {
   display: grid;
-  grid-template-columns: 210px minmax(240px, 1fr) minmax(280px, 1.15fr);
+  grid-template-columns: 220px minmax(280px, 1fr);
   gap: 8px;
   flex: 1 1 auto;
   min-height: 0;
@@ -1916,6 +1988,6 @@ body {
 
   .explorer-panes {
     grid-template-columns: 1fr;
-    grid-template-rows: 120px 160px minmax(180px, 1fr);
+    grid-template-rows: 140px minmax(180px, 1fr);
   }
 }

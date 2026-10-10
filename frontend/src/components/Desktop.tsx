@@ -1,15 +1,18 @@
 "use client";
 
-import { Folder, MessageCircle } from "lucide-react";
+import { FileText, Folder, MessageCircle } from "lucide-react";
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import BootScreen from "./BootScreen";
+import PreviewApp from "./PreviewApp";
 import RecordsApp from "./RecordsApp";
 import TalkApp, { TalkOrb } from "./TalkApp";
+import { PreviewProvider, type PreviewDoc } from "./preview";
 
 type WindowMode = "open" | "min" | "max";
 type TalkMode = "closed" | "open" | "min";
 type RecordsMode = "closed" | "open" | "min" | "max";
+type PreviewMode = "closed" | "open" | "min";
 type Frame = { x: number; y: number; w: number; h: number };
 type Edge = "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw";
 
@@ -21,19 +24,23 @@ export default function Desktop({ children }: { children: ReactNode }) {
   const [mode, setMode] = useState<WindowMode>("open");
   const [talkMode, setTalkMode] = useState<TalkMode>("closed");
   const [recordsMode, setRecordsMode] = useState<RecordsMode>("closed");
+  const [previewMode, setPreviewMode] = useState<PreviewMode>("closed");
+  const [previewDoc, setPreviewDoc] = useState<PreviewDoc | null>(null);
   const [clock, setClock] = useState("");
   const [date, setDate] = useState("");
   const [note, setNote] = useState("");
   const [frame, setFrame] = useState<Frame | null>(null);
   const [talkFrame, setTalkFrame] = useState<Frame | null>(null);
   const [recordsFrame, setRecordsFrame] = useState<Frame | null>(null);
+  const [previewFrame, setPreviewFrame] = useState<Frame | null>(null);
   const [ready, setReady] = useState(false);
   const screenRef = useRef<HTMLElement>(null);
   const talkRef = useRef<HTMLElement>(null);
   const recordsRef = useRef<HTMLElement>(null);
+  const previewRef = useRef<HTMLElement>(null);
   const dragRef = useRef<{
     kind: "move" | "resize";
-    target: "gavel" | "talk" | "records";
+    target: "gavel" | "talk" | "records" | "preview";
     edge: Edge | "";
     startX: number;
     startY: number;
@@ -63,11 +70,13 @@ export default function Desktop({ children }: { children: ReactNode }) {
         const next = drag.target === "gavel" ? clampFrame(moved) : clampMove(moved);
         if (drag.target === "talk") setTalkFrame(next);
         else if (drag.target === "records") setRecordsFrame(next);
+        else if (drag.target === "preview") setPreviewFrame(next);
         else setFrame(next);
         return;
       }
       const next = clampFrame(resized(drag.edge, drag.orig, dx, dy));
       if (drag.target === "records") setRecordsFrame(next);
+      else if (drag.target === "preview") setPreviewFrame(next);
       else setFrame(next);
     }
     function onUp() {
@@ -151,6 +160,37 @@ export default function Desktop({ children }: { children: ReactNode }) {
     dragRef.current = { kind: "resize", target: "records", edge, startX: event.clientX, startY: event.clientY, orig };
   }
 
+  function openPreview(doc: PreviewDoc) {
+    setPreviewDoc(doc);
+    setPreviewMode("open");
+  }
+
+  function readPreviewFrame(): Frame {
+    const rect = previewRef.current?.getBoundingClientRect();
+    if (!rect || rect.width < 40) {
+      const w = Math.min(780, window.innerWidth - 160);
+      const h = Math.min(640, window.innerHeight - 120);
+      return { x: 160, y: 48, w, h };
+    }
+    return { x: rect.left, y: rect.top, w: rect.width, h: rect.height };
+  }
+
+  function beginPreviewMove(event: ReactPointerEvent<HTMLDivElement>) {
+    if ((event.target as HTMLElement).closest("button")) return;
+    event.preventDefault();
+    const orig = previewFrame ?? readPreviewFrame();
+    setPreviewFrame(orig);
+    dragRef.current = { kind: "move", target: "preview", edge: "", startX: event.clientX, startY: event.clientY, orig };
+  }
+
+  function beginPreviewResize(edge: Edge, event: ReactPointerEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    event.stopPropagation();
+    const orig = previewFrame ?? readPreviewFrame();
+    setPreviewFrame(orig);
+    dragRef.current = { kind: "resize", target: "preview", edge, startX: event.clientX, startY: event.clientY, orig };
+  }
+
   function beginResize(edge: Edge, event: ReactPointerEvent<HTMLButtonElement>) {
     event.preventDefault();
     event.stopPropagation();
@@ -192,6 +232,14 @@ export default function Desktop({ children }: { children: ReactNode }) {
         >
           <RecordsOrb />
         </button>
+        <button
+          type="button"
+          className={previewMode === "open" ? "task-app task-app-on" : "task-app"}
+          aria-label="Preview"
+          onClick={() => setPreviewMode(previewMode === "open" ? "min" : "open")}
+        >
+          <PreviewOrb />
+        </button>
       </div>
       <div className="task-tray">
         <p className="task-credit">
@@ -212,6 +260,7 @@ export default function Desktop({ children }: { children: ReactNode }) {
   );
 
   return (
+    <PreviewProvider open={openPreview}>
     <div className="desktop">
       <nav className="desktop-icons" aria-label="Desktop">
         <button
@@ -229,6 +278,10 @@ export default function Desktop({ children }: { children: ReactNode }) {
         <button type="button" className="desktop-icon" onClick={() => setRecordsMode("open")}>
           <RecordsOrb />
           Records
+        </button>
+        <button type="button" className="desktop-icon" onDoubleClick={() => setPreviewMode("open")}>
+          <PreviewOrb />
+          Preview
         </button>
         <button type="button" className="desktop-icon" onClick={() => openAnd()}>
           <img src="/aero/icons/gallery.png" alt="" width={48} height={48} />
@@ -387,9 +440,47 @@ export default function Desktop({ children }: { children: ReactNode }) {
         </section>
       ) : null}
 
+      {previewMode !== "closed" ? (
+        <section
+          ref={previewRef}
+          className={previewFrame ? "preview-window preview-placed glass-panel" : "preview-window glass-panel"}
+          hidden={previewMode === "min"}
+          style={
+            previewFrame
+              ? { left: previewFrame.x, top: previewFrame.y, width: previewFrame.w, height: previewFrame.h }
+              : undefined
+          }
+        >
+          {EDGES.map((edge) => (
+            <button
+              key={edge}
+              type="button"
+              className={`resize-handle resize-${edge}`}
+              aria-label={`Resize ${edge}`}
+              onPointerDown={(event) => beginPreviewResize(edge, event)}
+            />
+          ))}
+          <div className="window-bar" onPointerDown={beginPreviewMove}>
+            <PreviewOrb small />
+            <h2 className="brand-title">Preview</h2>
+            {previewDoc?.draft ? <span className="draft-badge">Draft</span> : null}
+            <div className="chrome">
+              <button type="button" className="chrome-btn" aria-label="Minimize" onClick={() => setPreviewMode("min")}>
+                –
+              </button>
+              <button type="button" className="chrome-btn chrome-close" aria-label="Close" onClick={() => setPreviewMode("closed")}>
+                ×
+              </button>
+            </div>
+          </div>
+          <PreviewApp doc={previewDoc} />
+        </section>
+      ) : null}
+
       {ready ? createPortal(taskbar, document.body) : taskbar}
       {booted ? null : <BootScreen onDone={() => setBooted(true)} />}
     </div>
+    </PreviewProvider>
   );
 }
 
@@ -415,6 +506,14 @@ function RecordsOrb({ small = false }: { small?: boolean }) {
   return (
     <span className={small ? "records-orb records-orb-sm" : "records-orb"}>
       <Folder className="records-mark" aria-hidden="true" color="#ffffff" strokeWidth={2.4} />
+    </span>
+  );
+}
+
+function PreviewOrb({ small = false }: { small?: boolean }) {
+  return (
+    <span className={small ? "preview-orb preview-orb-sm" : "preview-orb"}>
+      <FileText className="preview-mark" aria-hidden="true" color="#ffffff" strokeWidth={2.4} />
     </span>
   );
 }

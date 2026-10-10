@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import PdfSheet from "./PdfSheet";
+import { previewUrl, usePreview } from "./preview";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -63,11 +63,13 @@ function FileRow({
   index,
   selected,
   onOpen,
+  onPreview,
 }: {
   document: RecordDocument;
   index: number;
   selected: boolean;
   onOpen: () => void;
+  onPreview: () => void;
 }) {
   const label = document.item_title ? `${document.title}. ${document.item_title}` : document.title;
   return (
@@ -75,8 +77,9 @@ function FileRow({
       type="button"
       className={selected ? "explorer-row explorer-on" : index % 2 === 1 ? "explorer-row explorer-row-alt" : "explorer-row"}
       aria-pressed={selected}
-      title={label}
+      title={document.is_pdf ? `${label}. Double-click to open in Preview.` : label}
       onClick={onOpen}
+      onDoubleClick={onPreview}
     >
       <span className="explorer-name">
         <img src="/aero/icons/file.png" alt="" width={16} height={16} />
@@ -99,6 +102,7 @@ export default function RecordsApp() {
   const [trail, setTrail] = useState<Place[]>([{ folder: null, file: null }]);
   const [index, setIndex] = useState(0);
   const place = trail[index] ?? { folder: null, file: null };
+  const openPreview = usePreview();
 
   useEffect(() => {
     const controller = new AbortController();
@@ -253,17 +257,17 @@ export default function RecordsApp() {
                 index={fileIndex}
                 selected={selected?.id === document.id}
                 onOpen={() => go({ folder: document.event_id, file: document.id })}
+                onPreview={() => {
+                  const url = previewUrl(document.file_url);
+                  if (document.is_pdf) {
+                    openPreview({ url, title: document.title, draft: document.is_draft });
+                    return;
+                  }
+                  window.open(url, "_blank", "noopener,noreferrer");
+                }}
               />
             ))}
           </div>
-        </section>
-
-        <section className="explorer-pane explorer-preview" aria-label="Preview">
-          <h3 className="explorer-pane-head">
-            Preview
-            {selected?.is_draft ? <span className="draft-badge">Draft</span> : null}
-          </h3>
-          <Preview selected={selected} />
         </section>
       </div>
 
@@ -273,23 +277,4 @@ export default function RecordsApp() {
       </footer>
     </div>
   );
-}
-
-function Preview({ selected }: { selected: RecordDocument | null }) {
-  if (selected?.is_pdf) {
-    return <PdfSheet key={selected.id} url={`${API}${selected.file_url}`} title={selected.title} />;
-  }
-  if (selected) {
-    return (
-      <div className="explorer-empty">
-        <img src="/aero/icons/file.png" alt="" width={48} height={48} />
-        <p>{selected.title}</p>
-        <p className="explorer-note">This file is not a PDF, so it opens in a new tab.</p>
-        <a className="gel-btn explorer-open" href={`${API}${selected.file_url}`} target="_blank" rel="noreferrer">
-          <span className="gel-label">Open file</span>
-        </a>
-      </div>
-    );
-  }
-  return <p className="explorer-empty">Select a file to read it here.</p>;
 }

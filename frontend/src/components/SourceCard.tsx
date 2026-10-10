@@ -1,3 +1,7 @@
+"use client";
+
+import { previewUrl, usePreview } from "./preview";
+
 type SourceCardProps = {
   number: number;
   body: string;
@@ -15,6 +19,7 @@ export default function SourceCard({
   status = "final",
   pdfUrl,
 }: SourceCardProps) {
+  const openPreview = usePreview();
   return (
     <article className="glass-panel panel source-card">
       <h3>
@@ -25,9 +30,19 @@ export default function SourceCard({
         {date} · Page {page}
       </p>
       {pdfUrl ? (
-        <a className="source-link" href={pdfUrl} target="_blank" rel="noreferrer">
+        <button
+          type="button"
+          className="source-link"
+          onClick={() =>
+            openPreview({
+              url: previewUrl(pdfUrl),
+              title: body,
+              draft: status === "draft",
+            })
+          }
+        >
           Open PDF
-        </a>
+        </button>
       ) : (
         <span className="source-link">PDF link coming soon</span>
       )}
