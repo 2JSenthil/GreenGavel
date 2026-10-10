@@ -25,7 +25,7 @@ function PageCanvas({
     const canvas = ref.current;
     if (!canvas) return;
     let cancelled = false;
-    let task: { cancel: () => void } | null = null;
+    let task: { cancel: () => void; promise: Promise<void> } | null = null;
 
     (async () => {
       const pdfPage = await doc.getPage(pageNumber);
@@ -81,9 +81,15 @@ export default function PdfSheet({ url, title }: PdfSheetProps) {
       const loaded = await task.promise;
       if (cancelled) return;
       const first = await loaded.getPage(1);
-      const natural = first.getViewport({ scale: 1 }).width;
-      const room = Math.max(240, (stageRef.current?.clientWidth ?? 520) - 48);
-      setZoom(Math.min(1.35, Math.max(0.7, room / natural)));
+      const box = first.getViewport({ scale: 1 });
+      if ((stageRef.current?.clientHeight ?? 0) < 80) {
+        await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      }
+      if (cancelled) return;
+      const stage = stageRef.current;
+      const roomW = Math.max(160, (stage?.clientWidth ?? 520) - 70);
+      const roomH = Math.max(160, (stage?.clientHeight ?? 640) - 54);
+      setZoom(Math.min(roomW / box.width, roomH / box.height));
       setDoc(loaded);
       setPages(loaded.numPages);
       setNote("");
@@ -130,7 +136,7 @@ export default function PdfSheet({ url, title }: PdfSheetProps) {
         <button type="button" className="explorer-nav" aria-label="Next page" disabled={page >= pages || pages === 0} onClick={() => jump(page + 1)}>
           <span className="gel-label">›</span>
         </button>
-        <button type="button" className="explorer-nav" aria-label="Zoom out" disabled={pages === 0} onClick={() => setZoom((current) => Math.max(0.6, Number((current - 0.2).toFixed(2))))}>
+        <button type="button" className="explorer-nav" aria-label="Zoom out" disabled={pages === 0} onClick={() => setZoom((current) => Math.max(0.25, Number((current - 0.15).toFixed(2))))}>
           <span className="gel-label">−</span>
         </button>
         <button type="button" className="explorer-nav" aria-label="Zoom in" disabled={pages === 0} onClick={() => setZoom((current) => Math.min(2.2, Number((current + 0.2).toFixed(2))))}>
