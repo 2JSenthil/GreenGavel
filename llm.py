@@ -6,35 +6,25 @@ from pathlib import Path
 import httpx
 from dotenv import load_dotenv
 
-load_dotenv(Path(__file__).resolve().parent / ".env")
+PROJECT_ROOT = Path(__file__).resolve().parent
+load_dotenv(PROJECT_ROOT / ".env")
 
-
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
-OPENROUTER_MODEL = os.getenv(
-    "OPENROUTER_MODEL",
-    "google/gemini-3.8-flash"
-)
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "").strip()
+OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "openai/gpt-4o-mini").strip()
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 
-
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-GEMINI_MODEL = os.getenv(
-    "GEMINI_MODEL",
-    "gemini-2.5-flash"
-)
-
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip()
 GEMINI_URL = (
     f"https://generativelanguage.googleapis.com/v1beta/"
     f"models/{GEMINI_MODEL}:generateContent"
 )
-
 
 CHAT_FALLBACK = (
     "I can hear you. Ask me about trees, water, transit, or energy."
 )
 
 REFUSAL = "The records I have don't say."
-
 BUSY = (
     "The AI service is temporarily unavailable. "
     "Please try again in a moment."
@@ -42,11 +32,6 @@ BUSY = (
 
 
 def _generate_openrouter(prompt, max_retries=3):
-    """
-    Try OpenRouter first.
-    Returns None if OpenRouter fails completely.
-    """
-
     if not OPENROUTER_API_KEY:
         print("OpenRouter key not found.")
         return None
@@ -54,16 +39,15 @@ def _generate_openrouter(prompt, max_retries=3):
     headers = {
         "Authorization": f"Bearer {OPENROUTER_API_KEY}",
         "Content-Type": "application/json",
+        "HTTP-Referer": "http://localhost:3000",
+        "X-Title": "Green Gavel",
     }
 
     body = {
         "model": OPENROUTER_MODEL,
-        "messages": [
-            {
-                "role": "user",
-                "content": prompt,
-            }
-        ],
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.2,
+        "max_tokens": 600,
     }
 
     for attempt in range(max_retries):
@@ -75,42 +59,21 @@ def _generate_openrouter(prompt, max_retries=3):
                 timeout=60,
             )
 
-            if response.status_code in {
-                429,
-                500,
-                502,
-                503,
-                504,
-            }:
+            if response.status_code in {429, 500, 502, 503, 504}:
                 wait_time = 2 ** attempt
-
-                print(
-                    f"OpenRouter unavailable. "
-                    f"Retrying in {wait_time} seconds..."
-                )
-
+                print(f"OpenRouter unavailable. Retrying in {wait_time} seconds...")
                 time.sleep(wait_time)
                 continue
 
             response.raise_for_status()
-
             result = response.json()
-
             content = result["choices"][0]["message"]["content"]
-
             if content:
                 print("LLM provider: OpenRouter")
                 return content
 
-        except (
-            httpx.HTTPError,
-            KeyError,
-            IndexError,
-            TypeError,
-        ) as error:
-
+        except (httpx.HTTPError, KeyError, IndexError, TypeError) as error:
             print(f"OpenRouter error: {error}")
-
             if attempt < max_retries - 1:
                 time.sleep(2 ** attempt)
 
@@ -118,78 +81,32 @@ def _generate_openrouter(prompt, max_retries=3):
 
 
 def _generate_gemini(prompt, max_retries=3):
-    """
-    Fallback to Google's Gemini API.
-    Returns None if Gemini also fails.
-    """
-
     if not GEMINI_API_KEY:
         print("Gemini key not found.")
         return None
 
     url = f"{GEMINI_URL}?key={GEMINI_API_KEY}"
-
-    body = {
-        "contents": [
-            {
-                "parts": [
-                    {
-                        "text": prompt
-                    }
-                ]
-            }
-        ]
-    }
+    body = {"contents": [{"parts": [{"text": prompt}]}]}
 
     for attempt in range(max_retries):
         try:
-            response = httpx.post(
-                url,
-                json=body,
-                timeout=60,
-            )
+            response = httpx.post(url, json=body, timeout=60)
 
-            if response.status_code in {
-                429,
-                500,
-                502,
-                503,
-                504,
-            }:
+            if response.status_code in {429, 500, 502, 503, 504}:
                 wait_time = 2 ** attempt
-
-                print(
-                    f"Gemini unavailable. "
-                    f"Retrying in {wait_time} seconds..."
-                )
-
+                print(f"Gemini unavailable. Retrying in {wait_time} seconds...")
                 time.sleep(wait_time)
                 continue
 
             response.raise_for_status()
-
             result = response.json()
-
-            content = (
-                result["candidates"][0]
-                ["content"]
-                ["parts"][0]
-                ["text"]
-            )
-
+            content = result["candidates"][0]["content"]["parts"][0]["text"]
             if content:
                 print("LLM provider: Gemini fallback")
                 return content
 
-        except (
-            httpx.HTTPError,
-            KeyError,
-            IndexError,
-            TypeError,
-        ) as error:
-
+        except (httpx.HTTPError, KeyError, IndexError, TypeError) as error:
             print(f"Gemini error: {error}")
-
             if attempt < max_retries - 1:
                 time.sleep(2 ** attempt)
 
@@ -197,26 +114,12 @@ def _generate_gemini(prompt, max_retries=3):
 
 
 def _generate(prompt, max_retries=3):
-    """
-    Use OpenRouter first.
-    If OpenRouter fails, automatically fall back to Gemini.
-    """
-
-    result = _generate_openrouter(
-        prompt,
-        max_retries=max_retries,
-    )
-
+    result = _generate_openrouter(prompt, max_retries=max_retries)
     if result:
         return result
 
     print("Falling back to Gemini...")
-
-    result = _generate_gemini(
-        prompt,
-        max_retries=max_retries,
-    )
-
+    result = _generate_gemini(prompt, max_retries=max_retries)
     if result:
         return result
 
@@ -234,7 +137,6 @@ def parse_route(raw):
 
     if word == "chat":
         return "chat"
-
     return "records"
 
 
@@ -294,13 +196,8 @@ Utterance:
 """
 
     try:
-        result = _generate(
-            prompt,
-            max_retries=2,
-        )
-
+        result = _generate(prompt, max_retries=2)
         return parse_route(result)
-
     except Exception:
         return "records"
 
@@ -339,22 +236,11 @@ User:
 
     try:
         text = _generate(prompt).strip()
-
     except Exception:
         text = ""
 
-    text = re.sub(
-        r"\s*\[\d+\]",
-        "",
-        text,
-    )
-
-    text = (
-        text
-        .replace("\u2014", ", ")
-        .replace("\u2013", ", ")
-        .strip()
-    )
+    text = re.sub(r"\s*\[\d+\]", "", text)
+    text = text.replace("\u2014", ", ").replace("\u2013", ", ").strip()
 
     if not text or text == REFUSAL:
         return CHAT_FALLBACK
@@ -362,11 +248,7 @@ User:
     return text
 
 
-def ask_llm(
-    question,
-    context,
-    max_retries=3,
-):
+def ask_llm(question, context, max_retries=3):
     prompt = f"""
 You are Green Gavel,
 an assistant that helps people understand
@@ -398,19 +280,11 @@ USER QUESTION:
 {question}
 """
 
-    return _generate(
-        prompt,
-        max_retries=max_retries,
-    )
+    return _generate(prompt, max_retries=max_retries)
 
 
 if __name__ == "__main__":
-
     print("Testing LLM providers...\n")
-
-    result = _generate(
-        "Reply with exactly: Green Gavel AI is working."
-    )
-
+    result = _generate("Reply with exactly: Green Gavel AI is working.")
     print("\nRESULT:")
     print(result)

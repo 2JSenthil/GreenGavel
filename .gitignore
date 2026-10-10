@@ -11,3 +11,8 @@ backend/data/audio/
 backend/data/answer_cache.json
 data/raw/**/*.pdf
 data/raw/**/*.docx
+
+backend/.venv/
+backend/data/answer_cache.json
+__pycache__/
+*.pyc

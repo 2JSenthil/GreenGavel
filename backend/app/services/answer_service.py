@@ -1,14 +1,13 @@
 import sys
 from pathlib import Path
 
-from app.config import DEMO_CACHE
-from app.models import Source
-from app.services.demo_replay import get_demo_answer
-
 ROOT = Path(__file__).resolve().parents[3]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from app.config import DEMO_CACHE
+from app.models import Source
+from app.services.demo_replay import get_demo_answer
 from llm import ask_llm, chat_reply, route_question
 from rag import build_context
 from retrieval import retrieve_chunks
@@ -55,9 +54,9 @@ async def generate_answer(
     if kind == "chat":
         return {"text": chat_reply(question), "sources": [], "kind": "chat"}
 
-    rows = retrieve_chunks(question)
+    rows = retrieve_chunks(question=question, limit=8)
     if not rows:
         return {"text": REFUSAL, "sources": [], "kind": "records"}
 
-    text = ask_llm(question, build_context(rows))
+    text = ask_llm(question=question, context=build_context(rows))
     return {"text": text, "sources": map_sources(rows), "kind": "records"}
