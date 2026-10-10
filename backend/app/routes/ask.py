@@ -6,7 +6,7 @@ from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 
 from app.models import AnswerRecord, AskRequest
-from app.services.answer_service import generate_answer
+from app.services.answer_service import generate_answer, prepare_question
 from app.services.cache import save_answer
 
 router = APIRouter()
@@ -32,9 +32,14 @@ async def ask(request: AskRequest):
                 )
                 return
 
+            kind, prepared = prepare_question(question)
+            yield sse_event("route", {"kind": kind})
+
             result = await generate_answer(
                 question,
-                request.topic
+                request.topic,
+                kind,
+                prepared,
             )
 
             sources = result["sources"]
@@ -70,7 +75,8 @@ async def ask(request: AskRequest):
                 answer_id=answer_id,
                 question=question,
                 text=answer_text,
-                sources=sources
+                sources=sources,
+                topic=request.topic,
             )
 
             save_answer(record)

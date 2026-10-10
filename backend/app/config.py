@@ -4,7 +4,9 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parents[1]
+ROOT_DIR = Path(__file__).resolve().parents[2]
 
+load_dotenv(ROOT_DIR / ".env")
 load_dotenv(BASE_DIR / ".env")
 
 DEMO_CACHE = os.getenv("DEMO_CACHE", "1") == "1"

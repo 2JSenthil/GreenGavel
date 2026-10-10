@@ -5,7 +5,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import FRONTEND_ORIGIN
-from app.routes import ask, brief, feed, health
+from app.routes import ask, brief, feed, health, records, transcribe
 
 logging.basicConfig(
     level=logging.INFO,
@@ -29,7 +29,7 @@ app.add_middleware(
     ],
     allow_credentials=False,
     allow_methods=["GET", "POST"],
-    allow_headers=["Content-Type"],
+    allow_headers=["*"],
 )
 
 
@@ -63,3 +63,5 @@ app.include_router(health.router)
 app.include_router(ask.router)
 app.include_router(brief.router)
 app.include_router(feed.router)
+app.include_router(records.router)
+app.include_router(transcribe.router)

@@ -1,8 +1,12 @@
+"use client";
+
+import { Leaf, Droplets, Bus, Sun } from "lucide-react";
+
 const topics = [
-  "Trees and green space",
-  "Stormwater and water",
-  "Transit and biking",
-  "Energy and climate",
+  { id: "trees", label: "Trees and green space", Icon: Leaf },
+  { id: "water", label: "Stormwater and water", Icon: Droplets },
+  { id: "transit", label: "Transit and biking", Icon: Bus },
+  { id: "energy", label: "Energy and climate", Icon: Sun },
 ];
 
 type TopicChipsProps = {
@@ -15,28 +19,25 @@ export default function TopicChips({
   onToggleTopic,
 }: TopicChipsProps) {
   return (
-    <div 
-      className="grid grid-cols-2 gap-3 md:grid-cols-4"
+    <div
+      className="topic-grid"
       role="group"
-      aria-label="Environmental topics">
-      {topics.map((topic) => {
-        const isSelected = selectedTopic === topic;
-        return (
+      aria-label="Environmental topics"
+    >
+      {topics.map(({ id, label, Icon }) => (
         <button
-          key={topic}
+          key={id}
           type="button"
-          aria-pressed={isSelected}
-          onClick={() => onToggleTopic(topic)}
-          className={`rounded-xl border p-3 text-sm transition ${
-              isSelected
-                ? "border-blue-500 bg-blue-500 font-semibold text-white"
-                : "border-blue-300 bg-white/70 text-gray-800 hover:bg-blue-100"
-            }`}
+          className="gel-btn-light topic-chip"
+          aria-pressed={selectedTopic === id}
+          onClick={() => onToggleTopic(id)}
         >
-          {topic}
+          <span className="gel-label">
+            <Icon aria-hidden="true" size={16} />
+            {label}
+          </span>
         </button>
-      );
-    })}
+      ))}
     </div>
   );
 }

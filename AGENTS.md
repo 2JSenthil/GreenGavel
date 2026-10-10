@@ -28,7 +28,7 @@ Chunk row: chunk_id, item_id, event_id, body, meeting_date, source_name, source_
 Topics: trees, water, transit, energy, tagged by regex over chunk text.
 
 ## Design (Frutiger Aero)
-Use styles/aero.css tokens. White text only on the dark gel stops. Body text sits on glass panels with ink #0b2e4f. Respect prefers-reduced-motion. Every control is a real button or link with a visible focus ring.
+The full inventory of tokens, controls, surfaces, and decorations is in docs/frutiger-aero.md. Use styles/aero.css tokens. Gel buttons and window bars use the skill gel with white labels. Body text sits on glass panels with ink #0b2e4f. Respect prefers-reduced-motion. Every control is a real button or link with a visible focus ring.
 
 ## Done means
 The change runs locally, python tests/run.py shows no regressions, and no secret appears in git diff.

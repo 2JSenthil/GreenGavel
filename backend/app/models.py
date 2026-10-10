@@ -21,6 +21,7 @@ class AnswerRecord(BaseModel):
     question: str
     text: str
     sources: list[Source]
+    topic: str | None = None
 
 
 class BriefRequest(BaseModel):
@@ -36,3 +37,23 @@ class Meeting(BaseModel):
 
 class FeedResponse(BaseModel):
     meetings: list[Meeting]
+
+
+class RecordDocument(BaseModel):
+    id: str
+    event_id: int
+    title: str
+    item_title: str = ""
+    kind: str
+    body: str
+    date: str
+    time: str = ""
+    status: str = ""
+    is_draft: bool = False
+    is_pdf: bool = True
+    file_url: str
+
+
+class RecordsResponse(BaseModel):
+    query: str
+    documents: list[RecordDocument]
