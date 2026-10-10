@@ -1,0 +1,249 @@
+{
+  "7fa72a52-5414-4cb3-84c1-2edd51f45ab5": {
+    "answer_id": "7fa72a52-5414-4cb3-84c1-2edd51f45ab5",
+    "question": "what is the town doing about trees?",
+    "text": "The records I have don't say.",
+    "sources": [],
+    "topic": "trees"
+  },
+  "ca140e23-efa3-46fc-a98b-04aa65504b96": {
+    "answer_id": "ca140e23-efa3-46fc-a98b-04aa65504b96",
+    "question": "when is the next meeting?",
+    "text": "The next Town Council meeting is scheduled for October 14, 2026, at 6:00 PM.",
+    "sources": [
+      {
+        "id": 1,
+        "body": "agenda",
+        "date": "2026-10-14T00:00:00",
+        "document_name": "agenda",
+        "page": 1,
+        "pdf_url": "https://chapelhill.legistar1.com/chapelhill/meetings/2026/10/2338_A_Town_Council_26-10-14_Council_Meeting_Agenda.pdf",
+        "is_draft": false
+      },
+      {
+        "id": 2,
+        "body": "agenda",
+        "date": "2026-10-14T00:00:00",
+        "document_name": "agenda",
+        "page": 1,
+        "pdf_url": "https://chapelhill.legistar1.com/chapelhill/meetings/2026/10/2338_A_Town_Council_26-10-14_Council_Meeting_Agenda.pdf",
+        "is_draft": false
+      },
+      {
+        "id": 3,
+        "body": "agenda",
+        "date": "2026-10-07T00:00:00",
+        "document_name": "agenda",
+        "page": 1,
+        "pdf_url": "https://chapelhill.legistar1.com/chapelhill/meetings/2026/10/2356_A_Town_Council_26-10-07_Council_Meeting_Agenda.pdf",
+        "is_draft": false
+      },
+      {
+        "id": 4,
+        "body": "minutes",
+        "date": "2026-10-07T00:00:00",
+        "document_name": "minutes",
+        "page": 1,
+        "pdf_url": "https://chapelhill.legistar1.com/chapelhill/meetings/2026/10/2356_M_Town_Council_26-10-07_Action_Minutes.pdf",
+        "is_draft": true
+      },
+      {
+        "id": 5,
+        "body": "agenda",
+        "date": "2026-10-07T00:00:00",
+        "document_name": "agenda",
+        "page": 1,
+        "pdf_url": "https://chapelhill.legistar1.com/chapelhill/meetings/2026/10/2356_A_Town_Council_26-10-07_Council_Meeting_Agenda.pdf",
+        "is_draft": false
+      },
+      {
+        "id": 6,
+        "body": "agenda",
+        "date": "2026-10-07T00:00:00",
+        "document_name": "agenda",
+        "page": 1,
+        "pdf_url": "https://chapelhill.legistar1.com/chapelhill/meetings/2026/10/2356_A_Town_Council_26-10-07_Council_Meeting_Agenda.pdf",
+        "is_draft": false
+      },
+      {
+        "id": 7,
+        "body": "minutes",
+        "date": "2026-10-07T00:00:00",
+        "document_name": "minutes",
+        "page": 1,
+        "pdf_url": "https://chapelhill.legistar1.com/chapelhill/meetings/2026/10/2356_M_Town_Council_26-10-07_Action_Minutes.pdf",
+        "is_draft": true
+      },
+      {
+        "id": 8,
+        "body": "agenda",
+        "date": "2026-10-07T00:00:00",
+        "document_name": "agenda",
+        "page": 1,
+        "pdf_url": "https://chapelhill.legistar1.com/chapelhill/meetings/2026/10/2356_A_Town_Council_26-10-07_Council_Meeting_Agenda.pdf",
+        "is_draft": false
+      }
+    ],
+    "topic": null
+  },
+  "ef6fca8c-6ab4-416b-8eed-4bb7ae829c2b": {
+    "answer_id": "ef6fca8c-6ab4-416b-8eed-4bb7ae829c2b",
+    "question": "what is the policy on storm water?",
+    "text": "The records I have don't say.",
+    "sources": [
+      {
+        "id": 1,
+        "body": "agenda",
+        "date": "2026-10-14T00:00:00",
+        "document_name": "agenda",
+        "page": 1,
+        "pdf_url": "https://chapelhill.legistar1.com/chapelhill/meetings/2026/10/2338_A_Town_Council_26-10-14_Council_Meeting_Agenda.pdf",
+        "is_draft": false
+      },
+      {
+        "id": 2,
+        "body": "agenda",
+        "date": "2026-10-07T00:00:00",
+        "document_name": "agenda",
+        "page": 1,
+        "pdf_url": "https://chapelhill.legistar1.com/chapelhill/meetings/2026/10/2356_A_Town_Council_26-10-07_Council_Meeting_Agenda.pdf",
+        "is_draft": false
+      },
+      {
+        "id": 3,
+        "body": "agenda",
+        "date": "2026-10-07T00:00:00",
+        "document_name": "agenda",
+        "page": 1,
+        "pdf_url": "https://chapelhill.legistar1.com/chapelhill/meetings/2026/10/2356_A_Town_Council_26-10-07_Council_Meeting_Agenda.pdf",
+        "is_draft": false
+      },
+      {
+        "id": 4,
+        "body": "minutes",
+        "date": "2026-10-07T00:00:00",
+        "document_name": "minutes",
+        "page": 1,
+        "pdf_url": "https://chapelhill.legistar1.com/chapelhill/meetings/2026/10/2356_M_Town_Council_26-10-07_Action_Minutes.pdf",
+        "is_draft": true
+      },
+      {
+        "id": 5,
+        "body": "agenda",
+        "date": "2026-09-30T00:00:00",
+        "document_name": "agenda",
+        "page": 1,
+        "pdf_url": "https://chapelhill.legistar1.com/chapelhill/meetings/2026/9/2342_A_Town_Council_26-09-30_Information_Packet.pdf",
+        "is_draft": false
+      },
+      {
+        "id": 6,
+        "body": "agenda",
+        "date": "2026-09-23T00:00:00",
+        "document_name": "agenda",
+        "page": 1,
+        "pdf_url": "https://chapelhill.legistar1.com/chapelhill/meetings/2026/9/2355_A_Town_Council_26-09-23_Council_Meeting_Agenda.pdf",
+        "is_draft": false
+      },
+      {
+        "id": 7,
+        "body": "agenda",
+        "date": "2026-06-22T00:00:00",
+        "document_name": "agenda",
+        "page": 1,
+        "pdf_url": "https://chapelhill.legistar1.com/chapelhill/meetings/2026/6/2419_A_Town_Council_26-06-22_Council_Meeting_Agenda.pdf",
+        "is_draft": false
+      },
+      {
+        "id": 8,
+        "body": "minutes",
+        "date": "2026-06-22T00:00:00",
+        "document_name": "minutes",
+        "page": 1,
+        "pdf_url": "https://chapelhill.legistar1.com/chapelhill/meetings/2026/6/2419_M_Town_Council_26-06-22_Meeting_Minutes.pdf",
+        "is_draft": false
+      }
+    ],
+    "topic": null
+  },
+  "88eadfaa-da2c-41c8-9713-f1363388f941": {
+    "answer_id": "88eadfaa-da2c-41c8-9713-f1363388f941",
+    "question": "what is the policy on storm water?",
+    "text": "The records I have don't say.",
+    "sources": [
+      {
+        "id": 1,
+        "body": "agenda",
+        "date": "2026-10-14T00:00:00",
+        "document_name": "agenda",
+        "page": 1,
+        "pdf_url": "https://chapelhill.legistar1.com/chapelhill/meetings/2026/10/2338_A_Town_Council_26-10-14_Council_Meeting_Agenda.pdf",
+        "is_draft": false
+      },
+      {
+        "id": 2,
+        "body": "agenda",
+        "date": "2026-10-07T00:00:00",
+        "document_name": "agenda",
+        "page": 1,
+        "pdf_url": "https://chapelhill.legistar1.com/chapelhill/meetings/2026/10/2356_A_Town_Council_26-10-07_Council_Meeting_Agenda.pdf",
+        "is_draft": false
+      },
+      {
+        "id": 3,
+        "body": "agenda",
+        "date": "2026-10-07T00:00:00",
+        "document_name": "agenda",
+        "page": 1,
+        "pdf_url": "https://chapelhill.legistar1.com/chapelhill/meetings/2026/10/2356_A_Town_Council_26-10-07_Council_Meeting_Agenda.pdf",
+        "is_draft": false
+      },
+      {
+        "id": 4,
+        "body": "minutes",
+        "date": "2026-10-07T00:00:00",
+        "document_name": "minutes",
+        "page": 1,
+        "pdf_url": "https://chapelhill.legistar1.com/chapelhill/meetings/2026/10/2356_M_Town_Council_26-10-07_Action_Minutes.pdf",
+        "is_draft": true
+      },
+      {
+        "id": 5,
+        "body": "agenda",
+        "date": "2026-09-30T00:00:00",
+        "document_name": "agenda",
+        "page": 1,
+        "pdf_url": "https://chapelhill.legistar1.com/chapelhill/meetings/2026/9/2342_A_Town_Council_26-09-30_Information_Packet.pdf",
+        "is_draft": false
+      },
+      {
+        "id": 6,
+        "body": "agenda",
+        "date": "2026-09-23T00:00:00",
+        "document_name": "agenda",
+        "page": 1,
+        "pdf_url": "https://chapelhill.legistar1.com/chapelhill/meetings/2026/9/2355_A_Town_Council_26-09-23_Council_Meeting_Agenda.pdf",
+        "is_draft": false
+      },
+      {
+        "id": 7,
+        "body": "agenda",
+        "date": "2026-06-22T00:00:00",
+        "document_name": "agenda",
+        "page": 1,
+        "pdf_url": "https://chapelhill.legistar1.com/chapelhill/meetings/2026/6/2419_A_Town_Council_26-06-22_Council_Meeting_Agenda.pdf",
+        "is_draft": false
+      },
+      {
+        "id": 8,
+        "body": "minutes",
+        "date": "2026-06-22T00:00:00",
+        "document_name": "minutes",
+        "page": 1,
+        "pdf_url": "https://chapelhill.legistar1.com/chapelhill/meetings/2026/6/2419_M_Town_Council_26-06-22_Meeting_Minutes.pdf",
+        "is_draft": false
+      }
+    ],
+    "topic": null
+  }
+}
