@@ -2,6 +2,8 @@
 
 Oct 10, 2026 · @Jason Charwin
 
+This file mirrors the working doc: https://claude.ai/code/artifact/7183c2e9-d072-4bab-a30e-34ad00f71ff1 . Diagrams live in `docs/`.
+
 ## Overview
 
 Green Gavel lets a resident ask what their town council is deciding about trees, stormwater, transit, or energy, and returns a cited answer plus a 60-second spoken brief, all inside a Frutiger Aero interface. We build one thing well: every sentence in an answer links to the page of the agenda or minutes it came from, and the app says "the records don't say" when they don't.
@@ -22,6 +24,8 @@ Green Gavel lets a resident ask what their town council is deciding about trees,
 
 Green Gavel is a batch ingest job, one Snowflake database, a small API, and a web app, with ElevenLabs called once per brief.
 
+![Architecture: batch ingest above, live path below](docs/architecture.png)
+
 The top row runs before the demo and fills Snowflake with council text. The bottom row runs live: the web app calls the API, the API retrieves chunks from Snowflake, asks a Cortex model to answer only from them, and asks ElevenLabs for the brief.
 
 | Layer | Choice | Reason |
@@ -39,7 +43,7 @@ Finish these before anyone writes feature code, so no one is blocked on a key at
 
 - [ ] Everyone: confirm you are applied, accepted, and registered in the HackNC portal, since unregistered teammates cannot win prizes.
 - [ ] Role D: create the Devpost project draft now and add every teammate. Choose the opt-ins listed in the Devpost section below.
-- [ ] Role A: create a public GitHub repo with a README stub. Commit only new code, since work started before the official start is not accepted.
+- [ ] Role A: the repo already exists at github.com/2JSenthil/HeelMates. Confirm it is public, since Devpost needs a GitHub link, and retitle the README to Green Gavel once the team agrees. Commit only new code, since work started before the official start is not accepted.
 - [ ] Role B: sign up for the Snowflake student trial, create database `GAVEL` and one warehouse, and grant your role `SNOWFLAKE.CORTEX_USER`. Create a programmatic access token and run one test call to the chat completions endpoint.
 - [ ] Role D: get the ElevenLabs key through the sponsor channel in Discord, pick one voice, and generate one test MP3.
 - [ ] Role A: run the Legistar request in the next section and save the JSON to `data/raw/events.json`.
@@ -272,6 +276,8 @@ The server keeps the last 50 answers in memory and on disk by `answer_id`, so th
 
 The whole product is one screen. The question box and four topic chips sit on top, the cited answer on the left, source cards on the right, and a strip of upcoming meetings along the bottom.
 
+![Main screen wireframe](docs/screen-wireframe.png)
+
 ### States the screen must handle
 
 | State | What the user sees |
@@ -417,6 +423,8 @@ def tts(script):
 ## Work plan
 
 Eight gates lead to a complete Devpost submission at 8:30 AM Sunday, which leaves 90 minutes before the 10:00 AM deadline. Each gate has a pass test, and a missed gate triggers a named cut.
+
+![Work plan gates from Saturday 1:00 PM to the Sunday 10:00 AM deadline](docs/work-plan-gates.png)
 
 | Gate | Passes when | If missed, cut |
 | --- | --- | --- |
