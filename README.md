@@ -4,7 +4,9 @@
 
 Import this repository as one Vercel project with its root set to this directory.
 `backend` uses root `.` because it imports the shared root Python modules.
-`main.py` exposes the ASGI app; root requirements include backend dependencies.
+`main.py` exposes the ASGI app. Root `requirements.txt` lists backend dependencies
+directly for Vercel's dependency parser. Keep it in sync with
+`backend/requirements.txt` when adding or changing Python dependencies.
 `frontend` builds independently from `frontend/`.
 
 Public `/api/*` requests reach FastAPI with their prefix preserved. All other
