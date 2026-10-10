@@ -1,4 +1,5 @@
 import os
+import tempfile
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -24,5 +25,10 @@ ELEVENLABS_VOICE_ID = os.getenv(
     "ELEVENLABS_VOICE_ID", ""
 )
 
-DATA_DIR = BASE_DIR / "data"
-DATA_DIR.mkdir(exist_ok=True)
+STATIC_DATA_DIR = BASE_DIR / "data"
+DATA_DIR = (
+    Path(tempfile.gettempdir()) / "green-gavel"
+    if os.getenv("VERCEL")
+    else STATIC_DATA_DIR
+)
+DATA_DIR.mkdir(parents=True, exist_ok=True)

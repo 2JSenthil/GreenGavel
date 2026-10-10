@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-ACCOUNT = os.getenv("SNOWFLAKE_ACCOUNT_IDENTIFIER")
+ACCOUNT = os.getenv("SNOWFLAKE_ACCOUNT_IDENTIFIER", "")
 PAT = os.getenv("SNOWFLAKE_PAT")
 
 ROLE = os.getenv("SNOWFLAKE_ROLE")

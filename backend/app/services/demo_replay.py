@@ -1,9 +1,9 @@
 import json
 
-from app.config import DATA_DIR
+from app.config import STATIC_DATA_DIR
 from app.models import Source
 
-REPLAY_FILE = DATA_DIR / "demo_replay.json"
+REPLAY_FILE = STATIC_DATA_DIR / "demo_replay.json"
 
 
 def normalize_question(question: str) -> str:
