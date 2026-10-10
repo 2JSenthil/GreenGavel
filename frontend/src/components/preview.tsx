@@ -24,7 +24,7 @@ export function usePreview() {
   return useContext(PreviewContext);
 }
 
-const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const API = process.env.NEXT_PUBLIC_API_URL ?? "";
 const HOSTS = new Set(["chapelhill.legistar1.com", "chapelhill.legistar.com"]);
 
 export function previewUrl(url: string) {

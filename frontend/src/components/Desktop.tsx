@@ -1,7 +1,7 @@
 "use client";
 
-import { FileText, Folder, MessageCircle } from "lucide-react";
-import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
+import { FileText, Folder, Leaf, MessageCircle } from "lucide-react";
+import { useEffect, useRef, useState, type FormEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import BootScreen from "./BootScreen";
 import PreviewApp from "./PreviewApp";
@@ -29,6 +29,8 @@ export default function Desktop({ children }: { children: ReactNode }) {
   const [clock, setClock] = useState("");
   const [date, setDate] = useState("");
   const [note, setNote] = useState("");
+  const [startOpen, setStartOpen] = useState(false);
+  const [startQuery, setStartQuery] = useState("");
   const [frame, setFrame] = useState<Frame | null>(null);
   const [talkFrame, setTalkFrame] = useState<Frame | null>(null);
   const [recordsFrame, setRecordsFrame] = useState<Frame | null>(null);
@@ -38,6 +40,9 @@ export default function Desktop({ children }: { children: ReactNode }) {
   const talkRef = useRef<HTMLElement>(null);
   const recordsRef = useRef<HTMLElement>(null);
   const previewRef = useRef<HTMLElement>(null);
+  const startBtnRef = useRef<HTMLButtonElement>(null);
+  const startMenuRef = useRef<HTMLDivElement>(null);
+  const startSearchRef = useRef<HTMLInputElement>(null);
   const dragRef = useRef<{
     kind: "move" | "resize";
     target: "gavel" | "talk" | "records" | "preview";
@@ -58,6 +63,29 @@ export default function Desktop({ children }: { children: ReactNode }) {
     const id = window.setInterval(tick, 15000);
     return () => window.clearInterval(id);
   }, []);
+
+  useEffect(() => {
+    if (!startOpen) return;
+    startSearchRef.current?.focus();
+    function onKey(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      setStartOpen(false);
+      startBtnRef.current?.focus();
+    }
+    function onPointer(event: PointerEvent) {
+      const target = event.target as Node;
+      if (startMenuRef.current?.contains(target)) return;
+      if (startBtnRef.current?.contains(target)) return;
+      setStartOpen(false);
+      startBtnRef.current?.focus();
+    }
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("pointerdown", onPointer);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("pointerdown", onPointer);
+    };
+  }, [startOpen]);
 
   useEffect(() => {
     function onMove(event: PointerEvent) {
@@ -98,6 +126,90 @@ export default function Desktop({ children }: { children: ReactNode }) {
       window.requestAnimationFrame(run);
     });
   }
+
+  function focusAsk() {
+    document.querySelector<HTMLInputElement>(".ask-input")?.focus();
+  }
+
+  function runStart(open: () => void) {
+    setStartOpen(false);
+    open();
+  }
+
+  const startApps = [
+    { name: "Chat", icon: <ChatOrb />, open: () => openAnd(focusAsk) },
+    { name: "Talk", icon: <TalkOrb />, open: () => setTalkMode("open") },
+    { name: "Records", icon: <RecordsOrb />, open: () => setRecordsMode("open") },
+    { name: "Preview", icon: <PreviewOrb />, open: () => setPreviewMode("open") },
+  ];
+  const startNeedle = startQuery.trim().toLowerCase();
+  const startMatches = startApps.filter((app) => app.name.toLowerCase().includes(startNeedle));
+
+  function submitStart(event: FormEvent) {
+    event.preventDefault();
+    if (startMatches.length === 0) {
+      runStart(() => openAnd(focusAsk));
+      return;
+    }
+    runStart(startMatches[0].open);
+  }
+
+  const startMenu = (
+    <div ref={startMenuRef} id="start-menu" className="start-menu" role="dialog" aria-label="Start">
+      <div className="start-main">
+        <div className="start-head">
+          <span className="gavel-orb start-portrait">
+            <Leaf className="gavel-mark" aria-hidden="true" color="#ffffff" strokeWidth={2.4} />
+          </span>
+          <div>
+            <p className="start-name">Green Gavel</p>
+            <p className="start-tag">Chapel Hill records</p>
+          </div>
+        </div>
+        <form onSubmit={submitStart}>
+          <input
+            ref={startSearchRef}
+            className="ask-input start-search"
+            value={startQuery}
+            onChange={(event) => setStartQuery(event.target.value)}
+            placeholder="Search"
+            aria-label="Search apps"
+          />
+        </form>
+        <ul className="start-apps">
+          {startMatches.map((app) => (
+            <li key={app.name}>
+              <button type="button" className="start-app" onClick={() => runStart(app.open)}>
+                {app.icon}
+                {app.name}
+              </button>
+            </li>
+          ))}
+          {startMatches.length === 0 ? (
+            <li>
+              <button type="button" className="start-app" onClick={() => runStart(() => openAnd(focusAsk))}>
+                <ChatOrb />
+                Ask in Chat
+              </button>
+            </li>
+          ) : null}
+        </ul>
+      </div>
+      <aside className="start-side">
+        <h2 className="start-side-title">Meetings</h2>
+        <p className="start-side-copy">Town council meetings and agenda links will appear here.</p>
+        <button
+          type="button"
+          className="gel-btn"
+          onClick={() =>
+            runStart(() => openAnd(() => document.getElementById("meetings")?.scrollIntoView({ block: "nearest" })))
+          }
+        >
+          <span className="gel-label">Open meetings</span>
+        </button>
+      </aside>
+    </div>
+  );
 
   function readFrame(): Frame {
     const rect = screenRef.current?.getBoundingClientRect();
@@ -202,7 +314,15 @@ export default function Desktop({ children }: { children: ReactNode }) {
 
   const taskbar = (
     <footer className="taskbar">
-      <button type="button" className="start-btn" aria-label="Start" onClick={() => openAnd()}>
+      <button
+        ref={startBtnRef}
+        type="button"
+        className="start-btn"
+        aria-label="Start"
+        aria-expanded={startOpen}
+        aria-controls="start-menu"
+        onClick={() => setStartOpen((open) => !open)}
+      >
         <span className="logo-orb logo-orb-sm">
           <UncMark />
         </span>
@@ -477,7 +597,7 @@ export default function Desktop({ children }: { children: ReactNode }) {
         </section>
       ) : null}
 
-      {ready ? createPortal(taskbar, document.body) : taskbar}
+      {ready ? createPortal(<>{startOpen ? startMenu : null}{taskbar}</>, document.body) : <>{startOpen ? startMenu : null}{taskbar}</>}
       {booted ? null : <BootScreen onDone={() => setBooted(true)} />}
     </div>
     </PreviewProvider>

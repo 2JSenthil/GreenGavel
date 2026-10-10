@@ -8,5 +8,6 @@ __pycache__/
 .venv/
 .DS_Store
 backend/data/audio/
+backend/data/answer_cache.json
 data/raw/**/*.pdf
 data/raw/**/*.docx

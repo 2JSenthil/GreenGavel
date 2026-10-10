@@ -615,6 +615,154 @@ body {
     radial-gradient(circle at 50% 64%, #d5ebf8, #4b9cd3 56%, #13294b);
 }
 
+.start-menu {
+  position: fixed;
+  z-index: 70;
+  left: 8px;
+  bottom: 68px;
+  width: min(520px, calc(100vw - 16px));
+  max-height: calc(100dvh - 84px);
+  overflow: auto;
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 12px;
+  padding: 16px;
+  box-sizing: border-box;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  background: rgba(247, 252, 255, 0.94);
+  color: var(--ink);
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 12px 28px rgba(0, 40, 80, 0.28);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  animation: start-rise 180ms ease;
+}
+
+.start-main {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.start-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.start-portrait {
+  width: 64px;
+  height: 64px;
+  flex-basis: 64px;
+}
+
+.start-name {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.start-tag {
+  margin: 2px 0 0;
+  color: var(--ink-muted);
+  font-size: 0.9rem;
+}
+
+.start-search {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.start-apps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.start-app {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.start-app:hover {
+  background: linear-gradient(#e9f8ff 0%, #bfe6f7 50%, #9bd9fb 50%, #73c8f8 100%);
+  border-color: #3b8fc0;
+}
+
+.start-app .chat-orb,
+.start-app .talk-orb,
+.start-app .records-orb,
+.start-app .preview-orb {
+  width: 40px;
+  height: 40px;
+  flex-basis: 40px;
+}
+
+.start-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.start-side-title {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--ink);
+}
+
+.start-side-copy {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 0.9rem;
+}
+
+@keyframes start-rise {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@media (max-width: 799px) {
+  .start-menu {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .start-menu {
+    animation: none;
+  }
+}
+
 .unc-mark {
   width: 70%;
   height: auto;
@@ -1152,6 +1300,128 @@ button.source-link {
   height: 52%;
 }
 
+.desktop-icon:hover .chat-mark,
+.desktop-icon:focus-visible .chat-mark,
+.start-app:hover .chat-mark,
+.start-app:focus-visible .chat-mark,
+.task-app:hover .chat-mark,
+.task-app:focus-visible .chat-mark,
+.desktop-icon:hover .records-mark,
+.desktop-icon:focus-visible .records-mark,
+.start-app:hover .records-mark,
+.start-app:focus-visible .records-mark,
+.task-app:hover .records-mark,
+.task-app:focus-visible .records-mark,
+.desktop-icon:hover .preview-mark,
+.desktop-icon:focus-visible .preview-mark,
+.start-app:hover .preview-mark,
+.start-app:focus-visible .preview-mark,
+.task-app:hover .preview-mark,
+.task-app:focus-visible .preview-mark {
+  overflow: visible;
+  transform-box: fill-box;
+  transform-origin: 50% 70%;
+}
+
+.desktop-icon:hover .chat-mark,
+.desktop-icon:focus-visible .chat-mark,
+.start-app:hover .chat-mark,
+.start-app:focus-visible .chat-mark,
+.task-app:hover .chat-mark,
+.task-app:focus-visible .chat-mark {
+  animation: app-chat 0.84s steps(1, end) infinite;
+}
+
+.desktop-icon:hover .records-mark,
+.desktop-icon:focus-visible .records-mark,
+.start-app:hover .records-mark,
+.start-app:focus-visible .records-mark,
+.task-app:hover .records-mark,
+.task-app:focus-visible .records-mark {
+  animation: app-records 0.9s steps(1, end) infinite;
+}
+
+.desktop-icon:hover .preview-mark,
+.desktop-icon:focus-visible .preview-mark,
+.start-app:hover .preview-mark,
+.start-app:focus-visible .preview-mark,
+.task-app:hover .preview-mark,
+.task-app:focus-visible .preview-mark {
+  animation: app-preview 0.72s steps(1, end) infinite;
+}
+
+.desktop-icon:hover .talk-wave span,
+.desktop-icon:focus-visible .talk-wave span,
+.start-app:hover .talk-wave span,
+.start-app:focus-visible .talk-wave span,
+.task-app:hover .talk-wave span,
+.task-app:focus-visible .talk-wave span {
+  transform-origin: center;
+  animation: app-talk 0.64s steps(1, end) infinite;
+}
+
+.desktop-icon:hover .talk-wave span:nth-child(2),
+.desktop-icon:focus-visible .talk-wave span:nth-child(2),
+.start-app:hover .talk-wave span:nth-child(2),
+.start-app:focus-visible .talk-wave span:nth-child(2),
+.task-app:hover .talk-wave span:nth-child(2),
+.task-app:focus-visible .talk-wave span:nth-child(2) {
+  animation-delay: 0.16s;
+}
+
+.desktop-icon:hover .talk-wave span:nth-child(3),
+.desktop-icon:focus-visible .talk-wave span:nth-child(3),
+.start-app:hover .talk-wave span:nth-child(3),
+.start-app:focus-visible .talk-wave span:nth-child(3),
+.task-app:hover .talk-wave span:nth-child(3),
+.task-app:focus-visible .talk-wave span:nth-child(3) {
+  animation-delay: 0.32s;
+}
+
+.desktop-icon:hover .talk-wave span:nth-child(4),
+.desktop-icon:focus-visible .talk-wave span:nth-child(4),
+.start-app:hover .talk-wave span:nth-child(4),
+.start-app:focus-visible .talk-wave span:nth-child(4),
+.task-app:hover .talk-wave span:nth-child(4),
+.task-app:focus-visible .talk-wave span:nth-child(4) {
+  animation-delay: 0.08s;
+}
+
+@keyframes app-chat {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  16.666% { transform: translate(-2px, -7px) rotate(-16deg); }
+  33.333% { transform: translate(-2px, -7px) rotate(-16deg); }
+  50% { transform: translate(2px, 2px) rotate(12deg); }
+  66.666% { transform: translate(0, 0) rotate(0deg); }
+  83.333% { transform: translate(0, -3px) rotate(-6deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+@keyframes app-records {
+  0% { transform: translateY(0) rotate(0deg); }
+  20% { transform: translateY(-3px) rotate(-12deg); }
+  40% { transform: translateY(-7px) rotate(-22deg); }
+  60% { transform: translateY(-7px) rotate(-22deg); }
+  80% { transform: translateY(0) rotate(8deg); }
+  100% { transform: translateY(0) rotate(0deg); }
+}
+
+@keyframes app-preview {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(-20deg); }
+  50% { transform: rotate(18deg); }
+  75% { transform: rotate(-8deg); }
+  100% { transform: rotate(0deg); }
+}
+
+@keyframes app-talk {
+  0% { transform: scaleY(0.4); }
+  25% { transform: scaleY(1.25); }
+  50% { transform: scaleY(0.35); }
+  75% { transform: scaleY(1); }
+  100% { transform: scaleY(0.4); }
+}
+
 .chat-orb-sm {
   width: 32px;
   height: 32px;
@@ -1400,10 +1670,17 @@ button.source-link {
   width: 72px;
   height: 72px;
   flex-basis: 72px;
+  overflow: visible;
   box-shadow:
     inset 0 -6px 8px rgba(0, 40, 80, 0.28),
     0 0 18px rgba(190, 245, 210, 0.55),
     0 0 42px rgba(90, 190, 255, 0.28);
+}
+
+.boot-lockup .gavel-mark {
+  transform-box: view-box;
+  transform-origin: 24% 82%;
+  animation: gavel-swing 1.45s steps(8, end) 0.55s 2;
 }
 
 .boot-word {
@@ -1483,6 +1760,18 @@ button.source-link {
 
 @keyframes boot-fade {
   to { opacity: 1; }
+}
+
+@keyframes gavel-swing {
+  0% { transform: rotate(0deg); }
+  12.5% { transform: rotate(-22deg); }
+  25% { transform: rotate(-22deg); }
+  37.5% { transform: rotate(-34deg); }
+  50% { transform: rotate(-34deg); }
+  62.5% { transform: rotate(20deg); }
+  75% { transform: rotate(-14deg); }
+  87.5% { transform: rotate(0deg); }
+  100% { transform: rotate(0deg); }
 }
 
 @keyframes boot-sweep {
