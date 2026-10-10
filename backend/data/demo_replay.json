@@ -1,0 +1,30 @@
+{
+  "what is the town deciding about trees?": {
+    "text": "Demo response: A hypothetical town council is considering changes to tree protection requirements [1]. This is sample data, not a verified council decision.",
+    "sources": [
+      {
+        "id": 1,
+        "body": "Demo Town Council",
+        "date": "2026-10-10",
+        "document_name": "Sample Tree Protection Agenda",
+        "page": 1,
+        "pdf_url": null,
+        "is_draft": true
+      }
+    ]
+  },
+  "what is the town doing about stormwater?": {
+    "text": "Demo response: A hypothetical stormwater improvement proposal is being reviewed [1]. This is sample data, not a verified council decision.",
+    "sources": [
+      {
+        "id": 1,
+        "body": "Demo Planning Department",
+        "date": "2026-10-10",
+        "document_name": "Sample Stormwater Agenda",
+        "page": 2,
+        "pdf_url": null,
+        "is_draft": true
+      }
+    ]
+  }
+}
