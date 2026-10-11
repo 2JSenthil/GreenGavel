@@ -6,10 +6,14 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:photon": "node --test tests/photon-answer.test.mjs"
   },
   "dependencies": {
+    "@chat-adapter/state-memory": "^4.41.1",
+    "@photon-ai/chat-adapter-imessage": "^3.2.0",
     "cfb": "^1.2.2",
+    "chat": "^4.41.1",
     "jszip": "^3.10.2",
     "lucide-react": "^1.55.0",
     "mammoth": "^1.13.0",

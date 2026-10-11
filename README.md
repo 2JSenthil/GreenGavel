@@ -4,6 +4,13 @@ Green Gavel answers what Chapel Hill's town bodies are deciding about trees, wat
 
 The browser talks only to this app's API. Snowflake, OpenRouter, Gemini, ElevenLabs, and Legistar are called from the server.
 
+Public `/api/*` requests reach FastAPI with their prefix preserved. All other
+paths reach Next.js. Browser API and audio URLs use the same origin.
+The Photon webhook at `/api/imessage/webhook` routes to Next.js before the general
+API rewrite. Its bot calls Python through the frontend's `BACKEND_URL` service
+binding targeting `backend`. This variable is read only inside runtime functions.
+Never set a binding variable manually or expose it through `NEXT_PUBLIC_`.
+
 ## Desktop
 
 The home page boots into a desktop (skip it with reduced motion, or press Enter). Windows drag, resize, minimize, and maximize. A start menu, taskbar, clock, sounds, and cursors sit on a UNC wallpaper. Settings stores the wallpaper choice in `localStorage` under `gg-wallpaper`.
@@ -236,3 +243,37 @@ cd backend && python -m unittest discover -s tests
 5. User-facing copy stays plain, without em dashes.
 
 `SCOPE.md` is the hackathon build plan. `CHECKLIST.md` is the task list. `AGENTS.md` is the instruction file for coding agents. The folder names in `AGENTS.md` describe the original plan. The tree in this README is the one in the repo.
+
+On Vercel, answer and MP3 caches use temporary storage; bundled demo records
+remain read-only. Caches are neither durable nor shared across instances.
+Brief and audio requests can return 404 after an instance change. Reliable
+production voice briefs require shared answer storage and MP3 object storage.
+
+## Photon iMessage bot
+
+The bot answers direct text messages using the existing `/api/ask` pipeline,
+preserving citations and adding numbered source links and Draft labels.
+It does not send voice attachments or initiate conversations.
+
+1. Create a cloud project at https://app.photon.codes/.
+2. Set `IMESSAGE_PROJECT_ID` and `IMESSAGE_PROJECT_SECRET` in Vercel for the
+   deployment environment you will test. Local Next.js variables belong in
+   `frontend/.env.local`; see `frontend/.env.example`. Do not expose credentials
+   with `NEXT_PUBLIC_` prefixes.
+3. Deploy and register `https://YOUR-DOMAIN/api/imessage/webhook` in Photon.
+4. Copy the endpoint's signing secret to `IMESSAGE_WEBHOOK_SECRET` in Vercel,
+   then redeploy. The adapter verifies incoming signatures. Missing configuration
+   returns 503; unsigned requests should be rejected once configured.
+5. Text the project's iMessage address or number and inspect Vercel runtime logs.
+   Test a records question, an unsupported question, and Draft records.
+
+Run `npm run test:photon --prefix frontend` for the SSE parsing and backend
+binding tests, and `npm run build --prefix frontend` for the production build.
+
+Use `vercel dev` for both services and automatic binding injection. Photon needs
+a public HTTPS webhook, so a deployed preview is the simplest end-to-end test.
+Ensure deployment protection permits Photon to reach that endpoint.
+
+Chat SDK uses in-memory state here. Deduplication and locking do not persist
+across instances, so retried webhook deliveries can produce duplicate replies.
+Use a shared Chat SDK state adapter before scaling beyond a prototype.

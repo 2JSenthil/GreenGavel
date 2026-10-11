@@ -6,6 +6,7 @@ node_modules/
 __pycache__/
 *.pyc
 .venv/
+.npm-cache/
 backend/.venv/
 .DS_Store
 backend/data/audio/
