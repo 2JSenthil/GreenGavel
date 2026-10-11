@@ -1,4 +1,3 @@
-import datetime
 import hashlib
 import re
 
@@ -11,56 +10,24 @@ MODEL_ID = "eleven_flash_v2_5"
 REFUSAL = "The records I have don't say."
 
 
-def spoken_date(value: str) -> str:
-    try:
-        day = datetime.date.fromisoformat(str(value)[:10])
-    except ValueError:
-        return str(value)
-    number = day.day
-    if 11 <= number % 100 <= 13:
-        suffix = "th"
-    else:
-        suffix = {1: "st", 2: "nd", 3: "rd"}.get(number % 10, "th")
-    return f"{day:%B} {number}{suffix}"
+def speakable(answer: str) -> str:
+    text = re.sub(r"\s*\[\d+\]", "", answer)
+    text = re.sub(r"\*\*(.+?)\*\*", r"\1", text)
+    text = re.sub(r"(?m)^\s*\*\s+", "", text)
+    text = re.sub(r"\s+\*\s+", " ", text)
+    text = text.replace("*", "")
+    text = re.sub(r"\s+", " ", text).strip()
+    return text
 
 
 def build_script(answer: str, sources: list[Source], topic_label: str | None) -> str:
-    label = topic_label or "Chapel Hill"
-    parts = [f"Here is your Green Gavel brief on {label}."]
-    seen: set[int] = set()
-    source_lines = 0
-
-    for sentence in re.split(r"(?<=[.!?])\s+", answer.strip()):
-        cleaned = re.sub(r"\s*\[\d+\]", "", sentence).strip()
-        if cleaned:
-            parts.append(cleaned)
-        ids = [int(number) for number in re.findall(r"\[(\d+)\]", sentence)]
-        for source_id in ids:
-            if source_id in seen:
-                continue
-            if source_lines >= 2 and len(" ".join(parts).split()) > 130:
-                break
-            match = next((source for source in sources if source.id == source_id), None)
-            if match is None:
-                continue
-            seen.add(source_id)
-            source_lines += 1
-            parts.append(
-                f"That comes from the {match.body} on {spoken_date(match.date)}."
-            )
-            if match.is_draft:
-                parts.append("Those minutes are still a draft.")
-            break
-
-    if not seen and sources:
-        first = sources[0]
-        parts.append(
-            f"That comes from the {first.body} on {spoken_date(first.date)}."
-        )
-        if first.is_draft:
-            parts.append("Those minutes are still a draft.")
-
-    parts.append("Full sources are on your screen.")
+    del topic_label
+    spoken = speakable(answer)
+    cited = {int(number) for number in re.findall(r"\[(\d+)\]", answer)}
+    relevant = [source for source in sources if source.id in cited] or sources[:1]
+    parts = [spoken]
+    if any(source.is_draft for source in relevant):
+        parts.append("Those minutes are still a draft.")
     return " ".join(part for part in parts if part)
 
 
@@ -70,24 +37,51 @@ def cache_key(script: str) -> str:
     ).hexdigest()
 
 
-async def generate_brief(script: str) -> bytes:
+_client: httpx.AsyncClient | None = None
+
+
+def eleven_client() -> httpx.AsyncClient:
+    global _client
+    if _client is None or _client.is_closed:
+        _client = httpx.AsyncClient(timeout=httpx.Timeout(30.0, connect=5.0))
+    return _client
+
+
+def _voice_request(script: str, stream: bool) -> tuple[str, dict]:
     if not ELEVENLABS_API_KEY or not ELEVENLABS_VOICE_ID:
         raise RuntimeError("ElevenLabs API key or voice ID is missing.")
-
+    path = "stream" if stream else ""
     url = (
         "https://api.elevenlabs.io/v1/text-to-speech/"
         f"{ELEVENLABS_VOICE_ID}"
     )
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        response = await client.post(
-            url,
-            headers={
-                "xi-api-key": ELEVENLABS_API_KEY,
-                "Content-Type": "application/json",
-                "Accept": "audio/mpeg",
-            },
-            params={"output_format": "mp3_44100_128"},
-            json={"text": script, "model_id": MODEL_ID},
-        )
+    if path:
+        url = f"{url}/{path}"
+    return url, {
+        "headers": {
+            "xi-api-key": ELEVENLABS_API_KEY,
+            "Content-Type": "application/json",
+            "Accept": "audio/mpeg",
+        },
+        "params": {
+            "output_format": "mp3_22050_32",
+            "optimize_streaming_latency": "4",
+        },
+        "json": {"text": script, "model_id": MODEL_ID},
+    }
+
+
+async def generate_brief(script: str) -> bytes:
+    url, options = _voice_request(script, stream=False)
+    response = await eleven_client().post(url, **options)
+    response.raise_for_status()
+    return response.content
+
+
+async def stream_brief(script: str):
+    url, options = _voice_request(script, stream=True)
+    async with eleven_client().stream("POST", url, **options) as response:
         response.raise_for_status()
-        return response.content
+        async for chunk in response.aiter_bytes():
+            if chunk:
+                yield chunk

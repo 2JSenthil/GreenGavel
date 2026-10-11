@@ -12,6 +12,21 @@ load_dotenv(PROJECT_ROOT / ".env")
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "").strip()
 OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "openai/gpt-4o-mini").strip()
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+_http = httpx.Client(timeout=60.0)
+
+RECORD_WORDS = {
+    "agenda", "bike", "bikes", "biking", "budget", "bus", "buses",
+    "canopy", "climate", "council", "creek", "development", "energy",
+    "flood", "flooding", "hearing", "housing", "mayor", "meeting",
+    "meetings", "minutes", "ordinance", "park", "parks", "plan", "plans",
+    "road", "roads", "sewer", "sidewalk", "solar", "stormwater", "traffic",
+    "transit", "transportation", "tree", "trees", "utility", "vote",
+    "voted", "votes", "water", "zoning",
+}
+
+
+def _post(url, **kwargs):
+    return _http.post(url, **kwargs)
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash").strip()
@@ -31,7 +46,7 @@ BUSY = (
 )
 
 
-def _generate_openrouter(prompt, max_retries=3):
+def _generate_openrouter(prompt, max_retries=3, max_tokens=4096):
     if not OPENROUTER_API_KEY:
         print("OpenRouter key not found.")
         return None
@@ -47,17 +62,22 @@ def _generate_openrouter(prompt, max_retries=3):
         "model": OPENROUTER_MODEL,
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.2,
-        "max_tokens": 600,
+        "max_tokens": max_tokens,
+        "reasoning": {"effort": "none", "exclude": True},
     }
 
     for attempt in range(max_retries):
         try:
-            response = httpx.post(
+            response = _post(
                 OPENROUTER_URL,
                 headers=headers,
                 json=body,
                 timeout=60,
             )
+
+            if response.status_code == 400 and "reasoning" in body:
+                body.pop("reasoning", None)
+                continue
 
             if response.status_code in {401, 402, 403}:
                 print(f"OpenRouter rejected the request ({response.status_code}).")
@@ -71,7 +91,13 @@ def _generate_openrouter(prompt, max_retries=3):
 
             response.raise_for_status()
             result = response.json()
-            content = result["choices"][0]["message"]["content"]
+            message = result["choices"][0]["message"]
+            content = message.get("content") or ""
+            if isinstance(content, list):
+                content = "".join(
+                    part.get("text", "") if isinstance(part, dict) else str(part)
+                    for part in content
+                )
             if content:
                 print("LLM provider: OpenRouter")
                 return content
@@ -84,17 +110,27 @@ def _generate_openrouter(prompt, max_retries=3):
     return None
 
 
-def _generate_gemini(prompt, max_retries=3):
+def _generate_gemini(prompt, max_retries=3, max_tokens=4096):
     if not GEMINI_API_KEY:
         print("Gemini key not found.")
         return None
 
     url = f"{GEMINI_URL}?key={GEMINI_API_KEY}"
-    body = {"contents": [{"parts": [{"text": prompt}]}]}
+    body = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {
+            "maxOutputTokens": max_tokens,
+            "thinkingConfig": {"thinkingBudget": 0},
+        },
+    }
 
     for attempt in range(max_retries):
         try:
-            response = httpx.post(url, json=body, timeout=60)
+            response = _post(url, json=body)
+
+            if response.status_code == 400 and "thinkingConfig" in body["generationConfig"]:
+                body["generationConfig"].pop("thinkingConfig", None)
+                continue
 
             if response.status_code in {401, 402, 403}:
                 print(f"Gemini rejected the request ({response.status_code}).")
@@ -121,13 +157,13 @@ def _generate_gemini(prompt, max_retries=3):
     return None
 
 
-def _generate(prompt, max_retries=3):
-    result = _generate_openrouter(prompt, max_retries=max_retries)
+def _generate(prompt, max_retries=3, max_tokens=4096):
+    result = _generate_openrouter(prompt, max_retries=max_retries, max_tokens=max_tokens)
     if result:
         return result
 
     print("Falling back to Gemini...")
-    result = _generate_gemini(prompt, max_retries=max_retries)
+    result = _generate_gemini(prompt, max_retries=max_retries, max_tokens=max_tokens)
     if result:
         return result
 
@@ -148,7 +184,26 @@ def parse_route(raw):
     return "records"
 
 
+def _is_chat(question):
+    text = " ".join(re.findall(r"[a-z0-9']+", question.lower()))
+    if not text or len(text.split()) > 8:
+        return False
+    openings = (
+        "hi", "hello", "hey", "thanks", "thank you", "thank",
+        "who are you", "what can you do", "what do you do",
+        "can you hear", "are you there", "good morning",
+        "good afternoon", "good evening", "how are you",
+    )
+    return any(text == phrase or text.startswith(phrase + " ") for phrase in openings)
+
+
 def route_question(question):
+    tokens = set(re.findall(r"[a-z0-9']+", question.lower()))
+    if tokens & RECORD_WORDS:
+        return "records"
+    if _is_chat(question):
+        return "chat"
+
     prompt = f"""
 You sort one utterance for Green Gavel,
 a voice app about Chapel Hill town records.
@@ -204,7 +259,7 @@ Utterance:
 """
 
     try:
-        result = _generate(prompt, max_retries=2)
+        result = _generate(prompt, max_retries=1, max_tokens=64)
         return parse_route(result)
     except Exception:
         return "records"
@@ -243,7 +298,7 @@ User:
 """
 
     try:
-        text = _generate(prompt).strip()
+        text = _generate(prompt, max_tokens=1024).strip()
     except Exception:
         text = ""
 
@@ -256,7 +311,7 @@ User:
     return text
 
 
-def ask_llm(question, context, max_retries=3):
+def ask_llm(question, context, max_retries=3, max_tokens=600):
     prompt = f"""
 You are Green Gavel,
 an assistant that helps people understand
@@ -288,7 +343,7 @@ USER QUESTION:
 {question}
 """
 
-    return _generate(prompt, max_retries=max_retries)
+    return _generate(prompt, max_retries=max_retries, max_tokens=max_tokens)
 
 
 if __name__ == "__main__":

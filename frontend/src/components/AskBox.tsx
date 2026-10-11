@@ -1,7 +1,10 @@
+import { play } from "./sounds";
+
 type AskBoxProps = {
   question: string;
   onQuestionChange: (value: string) => void;
   onSubmit: () => void;
+  onStop?: () => void;
   busy?: boolean;
 };
 
@@ -9,10 +12,12 @@ export default function AskBox({
   question,
   onQuestionChange,
   onSubmit,
+  onStop,
   busy = false,
 }: AskBoxProps) {
   const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!busy && question.trim()) play("menu");
     onSubmit();
   };
 
@@ -27,9 +32,15 @@ export default function AskBox({
         className="ask-input"
         aria-label="Ask what your town is deciding"
       />
-      <button type="submit" className="gel-btn" disabled={busy || !question.trim()}>
-        <span className="gel-label">Ask</span>
-      </button>
+      {busy ? (
+        <button type="button" className="gel-btn" onClick={onStop}>
+          <span className="gel-label">Stop</span>
+        </button>
+      ) : (
+        <button type="submit" className="gel-btn" data-sound="none" disabled={!question.trim()}>
+          <span className="gel-label">Ask</span>
+        </button>
+      )}
     </form>
   );
 }

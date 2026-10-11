@@ -1,3 +1,4 @@
+import asyncio
 import sys
 from pathlib import Path
 
@@ -47,16 +48,25 @@ async def generate_answer(
     topic: str | None = None,
     kind: str = "records",
     prepared: dict | None = None,
+    max_tokens: int = 600,
+    limit: int = 8,
 ):
     if prepared is not None:
         return {**prepared, "kind": "records"}
 
     if kind == "chat":
-        return {"text": chat_reply(question), "sources": [], "kind": "chat"}
+        text = await asyncio.to_thread(chat_reply, question)
+        return {"text": text, "sources": [], "kind": "chat"}
 
-    rows = retrieve_chunks(question=question, limit=8)
+    rows = await asyncio.to_thread(retrieve_chunks, question, limit)
     if not rows:
         return {"text": REFUSAL, "sources": [], "kind": "records"}
 
-    text = ask_llm(question=question, context=build_context(rows))
+    text = await asyncio.to_thread(
+        ask_llm,
+        question,
+        build_context(rows),
+        3,
+        max_tokens,
+    )
     return {"text": text, "sources": map_sources(rows), "kind": "records"}

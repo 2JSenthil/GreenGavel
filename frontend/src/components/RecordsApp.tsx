@@ -1,6 +1,8 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import { useBusy } from "./busyCursor";
+import { play } from "./sounds";
 import { previewUrl, usePreview } from "./preview";
 
 const API = "";
@@ -77,7 +79,7 @@ function FileRow({
       type="button"
       className={selected ? "explorer-row explorer-on" : index % 2 === 1 ? "explorer-row explorer-row-alt" : "explorer-row"}
       aria-pressed={selected}
-      title={document.is_pdf ? `${label}. Double-click to open in Preview.` : label}
+      title={`${label}. Double-click to open in Preview.`}
       onClick={onOpen}
       onDoubleClick={onPreview}
     >
@@ -98,6 +100,7 @@ export default function RecordsApp() {
   const [request, setRequest] = useState(0);
   const [documents, setDocuments] = useState<RecordDocument[]>([]);
   const [loading, setLoading] = useState(true);
+  useBusy(loading);
   const [note, setNote] = useState("");
   const [trail, setTrail] = useState<Place[]>([{ folder: null, file: null }]);
   const [index, setIndex] = useState(0);
@@ -120,7 +123,12 @@ export default function RecordsApp() {
         setDocuments(next);
         setTrail([{ folder: null, file: null }]);
         setIndex(0);
-        if (next.length === 0) setNote(submitted ? "No records match that search." : "No records are posted yet.");
+        if (next.length === 0) {
+          setNote(submitted ? "No records match that search." : "No records are posted yet.");
+          play("exclamation");
+        } else if (submitted) {
+          play("notify");
+        }
       })
       .catch((error: unknown) => {
         if (error instanceof DOMException && error.name === "AbortError") return;
@@ -128,6 +136,7 @@ export default function RecordsApp() {
         setTrail([{ folder: null, file: null }]);
         setIndex(0);
         setNote("Records are unavailable right now.");
+        play("critical");
       })
       .finally(() => {
         if (!controller.signal.aborted) setLoading(false);
@@ -148,6 +157,8 @@ export default function RecordsApp() {
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    play("menu");
+    setLoading(true);
     setSubmitted(query.trim());
     setRequest((current) => current + 1);
   }
@@ -200,7 +211,7 @@ export default function RecordsApp() {
             placeholder="Search"
             onChange={(event) => setQuery(event.target.value)}
           />
-          <button type="submit" className="gel-btn explorer-search-btn">
+          <button type="submit" className="gel-btn explorer-search-btn" data-sound="none">
             <span className="gel-label">Search</span>
           </button>
         </form>
@@ -258,12 +269,11 @@ export default function RecordsApp() {
                 selected={selected?.id === document.id}
                 onOpen={() => go({ folder: document.event_id, file: document.id })}
                 onPreview={() => {
-                  const url = previewUrl(document.file_url);
-                  if (document.is_pdf) {
-                    openPreview({ url, title: document.title, draft: document.is_draft });
-                    return;
-                  }
-                  window.open(url, "_blank", "noopener,noreferrer");
+                  openPreview({
+                    url: previewUrl(document.file_url),
+                    title: document.title,
+                    draft: document.is_draft,
+                  });
                 }}
               />
             ))}

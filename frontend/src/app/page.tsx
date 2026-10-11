@@ -4,8 +4,11 @@ import AskBox from "@/components/AskBox";
 import TopicChips from "@/components/TopicChips";
 import SourceCard, { uniqueSources } from "@/components/SourceCard";
 import Desktop from "@/components/Desktop";
+import RichText from "@/components/RichText";
 
 import { useEffect, useRef, useState } from "react";
+import { useBusy } from "@/components/busyCursor";
+import { play } from "@/components/sounds";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "";
 
@@ -18,12 +21,6 @@ type SourceItem = {
   is_draft?: boolean;
   document_name?: string;
 };
-
-function plainText(text: string) {
-  return text
-    .replace(/\*\*(.*?)\*\*/g, "$1")
-    .replace(/^\s*\*\s+/gm, "");
-}
 
 type Turn = {
   id: number;
@@ -38,8 +35,10 @@ export default function Home() {
   const [question, setQuestion] = useState("");
   const [turns, setTurns] = useState<Turn[]>([]);
   const [loading, setLoading] = useState(false);
+  useBusy(loading);
   const logRef = useRef<HTMLDivElement>(null);
   const turnId = useRef(0);
+  const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     const log = logRef.current;
@@ -55,10 +54,17 @@ export default function Home() {
     setQuestion(value);
   };
 
+  const handleStop = () => {
+    abortRef.current?.abort();
+  };
+
   const handleAsk = async (asked: string, topic?: string) => {
     const text = asked.trim();
     if (!text || loading) return;
 
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
     const id = turnId.current + 1;
     turnId.current = id;
     setQuestion("");
@@ -76,6 +82,7 @@ export default function Home() {
           question: text,
           topic,
         }),
+        signal: controller.signal,
       });
 
       if (!response.ok || !response.body) {
@@ -141,12 +148,18 @@ export default function Home() {
         pending: false,
         error,
       });
+      play(error ? "error" : "ding");
     } catch (fetchError) {
+      if (fetchError instanceof Error && fetchError.name === "AbortError") {
+        patchTurn(id, { pending: false });
+        return;
+      }
       console.error(fetchError);
       patchTurn(id, {
         pending: false,
         error: "Unable to connect to the backend right now.",
       });
+      play("critical");
     } finally {
       setLoading(false);
     }
@@ -172,6 +185,7 @@ export default function Home() {
                 <div className="chat-row chat-row-user">
                   <p className="chat-bubble chat-bubble-user">{turn.question}</p>
                 </div>
+                {turn.pending || turn.answer || turn.error ? (
                 <div className="chat-row chat-row-gavel">
                   {turn.pending && !turn.answer && !turn.error ? (
                     <p className="chat-bubble chat-bubble-gavel chat-typing" aria-label="Searching the records">
@@ -180,11 +194,12 @@ export default function Home() {
                       <span />
                     </p>
                   ) : (
-                    <p className="chat-bubble chat-bubble-gavel">
-                      {plainText(turn.error || turn.answer)}
-                    </p>
+                    <div className="chat-bubble chat-bubble-gavel">
+                      {turn.error || <RichText text={turn.answer} />}
+                    </div>
                   )}
                 </div>
+                ) : null}
               </div>
             ))}
           </div>
@@ -198,6 +213,7 @@ export default function Home() {
               question={question}
               onQuestionChange={handleQuestionChange}
               onSubmit={() => handleAsk(question)}
+              onStop={handleStop}
               busy={loading}
             />
           </div>

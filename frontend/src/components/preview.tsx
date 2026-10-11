@@ -27,6 +27,22 @@ export function usePreview() {
 const API = process.env.NEXT_PUBLIC_API_URL ?? "";
 const HOSTS = new Set(["chapelhill.legistar1.com", "chapelhill.legistar.com"]);
 
+export type PreviewKind = "pdf" | "docx" | "doc" | "xlsx" | "pptx" | "other";
+
+export function previewKind(url: string): PreviewKind {
+  let file = url;
+  try {
+    const parsed = new URL(url, "http://localhost");
+    file = parsed.searchParams.get("src") || parsed.pathname;
+  } catch {
+    file = url;
+  }
+  const name = decodeURIComponent(file.split("?")[0].split("/").pop() || "").toLowerCase();
+  const ext = name.split(".").pop() || "";
+  if (ext === "pdf" || ext === "docx" || ext === "doc" || ext === "xlsx" || ext === "pptx") return ext;
+  return "other";
+}
+
 export function previewUrl(url: string) {
   if (url.startsWith("/")) return `${API}${url}`;
   try {

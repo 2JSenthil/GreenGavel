@@ -12,3 +12,15 @@ backend/data/audio/
 backend/data/answer_cache.json
 data/raw/**/*.pdf
 data/raw/**/*.docx
+
+# Downloaded Windows XP packs. The app only uses the copies in frontend/public.
+/windows-xp-1/
+/windows-xp-1.zip
+/windowsxpstartup_201910/
+/windowsxpstartup_201910.zip
+/frontend/public/cursors/cross.cur
+/frontend/public/cursors/default_busy.cur
+/frontend/public/cursors/default_helpsel.cur
+/frontend/public/cursors/default_ibeam.cur
+/frontend/public/cursors/default_up.cur
+/frontend/public/cursors/default_wait.cur

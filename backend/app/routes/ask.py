@@ -43,6 +43,8 @@ async def ask(request: AskRequest):
                 request.topic,
                 kind,
                 prepared,
+                max_tokens=2048,
+                limit=5 if request.voice else 8,
             )
 
             sources = result["sources"]
@@ -59,11 +61,15 @@ async def ask(request: AskRequest):
                 }
             )
 
-            chunk_size = 35
-            for i in range(0, len(answer_text), chunk_size):
-                chunk = answer_text[i:i + chunk_size]
-                yield sse_event("delta", {"text": chunk})
-                await asyncio.sleep(0.05)
+            if request.voice:
+                if answer_text:
+                    yield sse_event("delta", {"text": answer_text})
+            else:
+                chunk_size = 35
+                for i in range(0, len(answer_text), chunk_size):
+                    chunk = answer_text[i:i + chunk_size]
+                    yield sse_event("delta", {"text": chunk})
+                    await asyncio.sleep(0.02)
 
             record = AnswerRecord(
                 answer_id=answer_id,

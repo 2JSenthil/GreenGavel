@@ -66,6 +66,9 @@ def build_search_terms(question):
     return terms
 
 
+_session = requests.Session()
+
+
 def run_query(sql):
     """
     Send a SQL query to Snowflake using the SQL REST API.
@@ -80,7 +83,7 @@ def run_query(sql):
         "timeout": 60
     }
 
-    response = requests.post(
+    response = _session.post(
         SQL_URL,
         headers=HEADERS,
         json=body

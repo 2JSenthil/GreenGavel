@@ -68,20 +68,20 @@ class OpenRouterRetryTest(unittest.TestCase):
                 200,
             )
 
-        original_post = llm.httpx.post
+        original_post = llm._post
         original_sleep = llm.time.sleep
         original_key = llm.OPENROUTER_API_KEY
         original_model = llm.OPENROUTER_MODEL
         try:
             llm.OPENROUTER_API_KEY = "test-key"
             llm.OPENROUTER_MODEL = "openai/gpt-4o-mini"
-            llm.httpx.post = fake_post
+            llm._post = fake_post
             llm.time.sleep = lambda _: None
             answer = llm.ask_llm("What happened?", "Context goes here.", max_retries=3)
             self.assertEqual(answer, "Recovered answer")
             self.assertEqual(len(calls), 3)
         finally:
-            llm.httpx.post = original_post
+            llm._post = original_post
             llm.time.sleep = original_sleep
             llm.OPENROUTER_API_KEY = original_key
             llm.OPENROUTER_MODEL = original_model

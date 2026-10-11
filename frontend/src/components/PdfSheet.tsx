@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { PDFDocumentProxy } from "pdfjs-dist";
+import { useBusy } from "./busyCursor";
+import { play } from "./sounds";
 
 type PdfSheetProps = {
   url: string;
@@ -62,6 +64,7 @@ export default function PdfSheet({ url, title }: PdfSheetProps) {
   const [page, setPage] = useState(1);
   const [zoom, setZoom] = useState(1);
   const [note, setNote] = useState("Opening the file...");
+  useBusy(note === "Opening the file...");
 
   useEffect(() => {
     let cancelled = false;
@@ -93,8 +96,12 @@ export default function PdfSheet({ url, title }: PdfSheetProps) {
       setDoc(loaded);
       setPages(loaded.numPages);
       setNote("");
+      play("default");
     })().catch(() => {
-      if (!cancelled) setNote("This PDF could not be opened.");
+      if (!cancelled) {
+        setNote("This PDF could not be opened.");
+        play("exclamation");
+      }
     });
 
     return () => {
