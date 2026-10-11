@@ -1,0 +1,103 @@
+#ChatGPT queries in Snowflake SQL
+
+GRANT USAGE ON DATABASE GREEN_GAVEL TO ROLE SYSADMIN;
+
+GRANT USAGE ON SCHEMA GREEN_GAVEL.PUBLIC TO ROLE SYSADMIN;
+
+GRANT SELECT ON TABLE GREEN_GAVEL.PUBLIC.CHUNKS TO ROLE SYSADMIN;
+
+GRANT USAGE ON WAREHOUSE SNOWFLAKE_LEARNING_WH TO ROLE SYSADMIN;
+
+
+CREATE DATABASE IF NOT EXISTS GREEN_GAVEL;
+
+USE ROLE ACCOUNTADMIN;
+
+GRANT DATABASE ROLE SNOWFLAKE.CORTEX_REST_API_USER
+TO ROLE SYSADMIN;
+SHOW GRANTS TO ROLE SYSADMIN;
+
+USE ROLE ACCOUNTADMIN;
+
+GRANT DATABASE ROLE SNOWFLAKE.CORTEX_USER
+TO ROLE SYSADMIN;
+
+GRANT USE AI FUNCTIONS ON ACCOUNT
+TO ROLE SYSADMIN;
+
+ALTER USER JSENTHIL
+SET DEFAULT_ROLE = SYSADMIN;
+
+
+
+SHOW USERS LIKE 'JSENTHIL';
+USE DATABASE GREEN_GAVEL;
+USE SCHEMA PUBLIC;
+
+CREATE TABLE IF NOT EXISTS DOCUMENTS (
+    document_id STRING,
+    event_id STRING,
+    meeting_name STRING,
+    meeting_date STRING,
+    meeting_time STRING,
+    meeting_location STRING,
+    document_type STRING,
+    status STRING,
+    source_url STRING,
+    event_page_url STRING,
+    full_text STRING
+);
+
+CREATE TABLE IF NOT EXISTS CHUNKS (
+    chunk_id STRING,
+    document_id STRING,
+    event_id STRING,
+    chunk_index INTEGER,
+    chunk_text STRING,
+    topics STRING,
+    meeting_name STRING,
+    meeting_date STRING,
+    document_type STRING,
+    status STRING,
+    source_url STRING
+);
+
+USE DATABASE GREEN_GAVEL;
+USE SCHEMA PUBLIC;
+
+SELECT COUNT(*)
+FROM DOCUMENTS;
+
+SELECT COUNT(*)
+FROM CHUNKS;
+
+SELECT *
+FROM CHUNKS
+LIMIT 10;
+
+SELECT
+    meeting_date,
+    document_type,
+    status,
+    chunk_text,
+    source_url
+FROM CHUNKS
+WHERE LOWER(chunk_text) LIKE '%stormwater%'
+ORDER BY meeting_date DESC
+LIMIT 10;
+
+SELECT
+    meeting_date,
+    document_type,
+    status,
+    chunk_text,
+    source_url
+FROM CHUNKS
+WHERE
+    LOWER(chunk_text) LIKE '%stormwater%'
+    OR LOWER(chunk_text) LIKE '%flood%'
+    OR LOWER(chunk_text) LIKE '%drainage%'
+    OR LOWER(chunk_text) LIKE '%watershed%'
+ORDER BY meeting_date DESC
+LIMIT 8;
+
