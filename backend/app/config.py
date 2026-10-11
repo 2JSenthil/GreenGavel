@@ -43,11 +43,12 @@ SNOWFLAKE_DATABASE = _env("SNOWFLAKE_DATABASE", "")
 SNOWFLAKE_SCHEMA = _env("SNOWFLAKE_SCHEMA", "")
 
 STATIC_DATA_DIR = BASE_DIR / "data"
+SOURCE_DATA_DIR = PROJECT_ROOT / "data"
 DATA_DIR = (
     Path(tempfile.gettempdir()) / "green-gavel"
     if os.getenv("VERCEL")
-    else PROJECT_ROOT / "data"
+    else SOURCE_DATA_DIR
 )
 DATA_DIR.mkdir(parents=True, exist_ok=True)
-CHUNKS_CSV = DATA_DIR / "chunks.csv"
-DOCUMENTS_CSV = DATA_DIR / "documents.csv"
+CHUNKS_CSV = SOURCE_DATA_DIR / "chunks.csv"
+DOCUMENTS_CSV = SOURCE_DATA_DIR / "documents.csv"

@@ -14,7 +14,7 @@ OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "openai/gpt-4o-mini").strip()
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip()
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash").strip()
 GEMINI_URL = (
     f"https://generativelanguage.googleapis.com/v1beta/"
     f"models/{GEMINI_MODEL}:generateContent"
@@ -59,6 +59,10 @@ def _generate_openrouter(prompt, max_retries=3):
                 timeout=60,
             )
 
+            if response.status_code in {401, 402, 403}:
+                print(f"OpenRouter rejected the request ({response.status_code}).")
+                return None
+
             if response.status_code in {429, 500, 502, 503, 504}:
                 wait_time = 2 ** attempt
                 print(f"OpenRouter unavailable. Retrying in {wait_time} seconds...")
@@ -92,6 +96,10 @@ def _generate_gemini(prompt, max_retries=3):
         try:
             response = httpx.post(url, json=body, timeout=60)
 
+            if response.status_code in {401, 402, 403}:
+                print(f"Gemini rejected the request ({response.status_code}).")
+                return None
+
             if response.status_code in {429, 500, 502, 503, 504}:
                 wait_time = 2 ** attempt
                 print(f"Gemini unavailable. Retrying in {wait_time} seconds...")
@@ -106,7 +114,7 @@ def _generate_gemini(prompt, max_retries=3):
                 return content
 
         except (httpx.HTTPError, KeyError, IndexError, TypeError) as error:
-            print(f"Gemini error: {error}")
+            print(f"Gemini error: {str(error).replace(GEMINI_API_KEY, '<key>')}")
             if attempt < max_retries - 1:
                 time.sleep(2 ** attempt)
 

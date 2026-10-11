@@ -2,14 +2,12 @@
 
 import AskBox from "@/components/AskBox";
 import TopicChips from "@/components/TopicChips";
-import AnswerPanel from "@/components/AnswerPanel";
-import SourceCard from "@/components/SourceCard";
-import FeedStrip from "@/components/FeedStrip";
+import SourceCard, { uniqueSources } from "@/components/SourceCard";
 import Desktop from "@/components/Desktop";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const API = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 type SourceItem = {
   id: number;
@@ -21,66 +19,62 @@ type SourceItem = {
   document_name?: string;
 };
 
-type MeetingItem = {
-  id?: string;
-  title?: string;
-  body?: string;
-  date?: string;
-  time?: string;
-  agenda_pdf?: string;
-  agenda_url?: string;
-  meeting_url?: string;
+function plainText(text: string) {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, "$1")
+    .replace(/^\s*\*\s+/gm, "");
+}
+
+type Turn = {
+  id: number;
+  question: string;
+  answer: string;
+  sources: SourceItem[];
+  pending: boolean;
+  error: string;
 };
 
 export default function Home() {
   const [question, setQuestion] = useState("");
-  const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
-  const [answer, setAnswer] = useState("");
-  const [sources, setSources] = useState<SourceItem[]>([]);
-  const [meetings, setMeetings] = useState<MeetingItem[]>([]);
+  const [turns, setTurns] = useState<Turn[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const logRef = useRef<HTMLDivElement>(null);
+  const turnId = useRef(0);
 
   useEffect(() => {
-    async function loadFeed() {
-      try {
-        const response = await fetch(`${API}/api/feed?days=14`);
-        if (!response.ok) return;
-        const data = await response.json();
-        setMeetings(data.meetings ?? []);
-      } catch {
-        setMeetings([]);
-      }
-    }
+    const log = logRef.current;
+    if (!log) return;
+    log.scrollTop = log.scrollHeight;
+  }, [turns]);
 
-    loadFeed();
-  }, []);
+  function patchTurn(id: number, patch: Partial<Turn>) {
+    setTurns((current) => current.map((turn) => (turn.id === id ? { ...turn, ...patch } : turn)));
+  }
 
   const handleQuestionChange = (value: string) => {
     setQuestion(value);
   };
 
-  const handleToggleTopic = (topic: string) => {
-    setSelectedTopic((previous) =>
-      previous === topic ? null : topic
-    );
-  };
+  const handleAsk = async (asked: string, topic?: string) => {
+    const text = asked.trim();
+    if (!text || loading) return;
 
-  const handleAsk = async () => {
-    if (!question.trim()) return;
-
+    const id = turnId.current + 1;
+    turnId.current = id;
+    setQuestion("");
     setLoading(true);
-    setError("");
-    setAnswer("");
-    setSources([]);
+    setTurns((current) => [
+      ...current,
+      { id, question: text, answer: "", sources: [], pending: true, error: "" },
+    ]);
 
     try {
       const response = await fetch(`${API}/api/ask`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          question: question.trim(),
-          topic: selectedTopic ?? undefined,
+          question: text,
+          topic,
         }),
       });
 
@@ -93,6 +87,7 @@ export default function Home() {
       let buffer = "";
       let nextText = "";
       let nextSources: SourceItem[] = [];
+      let error = "";
 
       while (true) {
         const { value, done } = await reader.read();
@@ -125,63 +120,97 @@ export default function Home() {
 
           if (event === "delta") {
             nextText += payload.text ?? "";
-            setAnswer(nextText);
+            patchTurn(id, { answer: nextText });
           }
 
           if (event === "sources") {
             nextSources = payload.sources ?? [];
-            setSources(nextSources);
+            patchTurn(id, { sources: nextSources });
           }
 
           if (event === "error") {
-            setError(payload.message ?? "Unable to generate an answer.");
+            error = payload.message ?? "Unable to generate an answer.";
+            patchTurn(id, { error });
           }
         }
       }
 
-      setAnswer(nextText || "The records I have don't say.");
-      setSources(nextSources);
+      patchTurn(id, {
+        answer: nextText || (error ? "" : "The records I have don't say."),
+        sources: nextSources,
+        pending: false,
+        error,
+      });
     } catch (fetchError) {
       console.error(fetchError);
-      setError("Unable to connect to the backend right now.");
-      setAnswer("The records I have don't say.");
+      patchTurn(id, {
+        pending: false,
+        error: "Unable to connect to the backend right now.",
+      });
     } finally {
       setLoading(false);
     }
   };
 
+  const latest = turns[turns.length - 1];
+  const shownSources = uniqueSources(latest?.sources ?? []);
+
   return (
     <Desktop>
-      <section className="ask-block">
-        <AskBox
-          question={question}
-          onQuestionChange={handleQuestionChange}
-          onSubmit={handleAsk}
-        />
-        <TopicChips
-          selectedTopic={selectedTopic}
-          onToggleTopic={handleToggleTopic}
-        />
-      </section>
-
       <section className="split">
-        <AnswerPanel
-          answer={answer}
-          loading={loading}
-          error={error}
-          sources={sources}
-        />
+        <div className="glass-panel chat-panel">
+          <div className="chat-log" ref={logRef} aria-live="polite" aria-busy={loading}>
+            {turns.length === 0 ? (
+              <div className="chat-row chat-row-gavel">
+                <p className="chat-bubble chat-bubble-gavel">
+                  Ask a question to learn what your town council is deciding about environmental issues.
+                </p>
+              </div>
+            ) : null}
+            {turns.map((turn) => (
+              <div className="chat-exchange" key={turn.id}>
+                <div className="chat-row chat-row-user">
+                  <p className="chat-bubble chat-bubble-user">{turn.question}</p>
+                </div>
+                <div className="chat-row chat-row-gavel">
+                  {turn.pending && !turn.answer && !turn.error ? (
+                    <p className="chat-bubble chat-bubble-gavel chat-typing" aria-label="Searching the records">
+                      <span />
+                      <span />
+                      <span />
+                    </p>
+                  ) : (
+                    <p className="chat-bubble chat-bubble-gavel">
+                      {plainText(turn.error || turn.answer)}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="chat-composer">
+            <TopicChips
+              className="chat-topics"
+              busy={loading}
+              onAsk={handleAsk}
+            />
+            <AskBox
+              question={question}
+              onQuestionChange={handleQuestionChange}
+              onSubmit={() => handleAsk(question)}
+              busy={loading}
+            />
+          </div>
+        </div>
         <div className="glass-panel" id="sources">
           <h2 className="window-bar">Sources</h2>
           <div className="panel-body source-list">
-            {sources.length > 0 ? (
-              sources.map((source, index) => (
+            {shownSources.length > 0 ? (
+              shownSources.map((source, index) => (
                 <SourceCard
                   key={`${source.id ?? source.body}-${index}`}
-                  number={index + 1}
                   body={source.body}
                   date={source.date}
-                  page={source.page}
                   status={source.is_draft ? "draft" : "final"}
                   pdfUrl={source.pdf_url ?? null}
                 />
@@ -192,10 +221,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      <div id="meetings">
-        <FeedStrip meetings={meetings} />
-      </div>
     </Desktop>
   );
 }

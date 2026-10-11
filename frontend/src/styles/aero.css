@@ -49,7 +49,8 @@ body {
   filter: brightness(1.08);
 }
 
-.gel-btn:disabled {
+.gel-btn:disabled,
+.gel-btn-light:disabled {
   filter: grayscale(0.2) brightness(0.9);
   cursor: not-allowed;
 }
@@ -620,11 +621,11 @@ body {
   z-index: 70;
   left: 8px;
   bottom: 68px;
-  width: min(520px, calc(100vw - 16px));
+  width: min(360px, calc(100vw - 16px));
   max-height: calc(100dvh - 84px);
   overflow: auto;
-  display: grid;
-  grid-template-columns: 1.15fr 0.85fr;
+  display: flex;
+  flex-direction: column;
   gap: 12px;
   padding: 16px;
   box-sizing: border-box;
@@ -716,30 +717,6 @@ body {
   flex-basis: 40px;
 }
 
-.start-side {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 10px;
-  min-width: 0;
-  padding: 12px;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.85);
-  background: rgba(255, 255, 255, 0.72);
-}
-
-.start-side-title {
-  margin: 0;
-  font-size: 1rem;
-  color: var(--ink);
-}
-
-.start-side-copy {
-  margin: 0;
-  color: var(--ink-muted);
-  font-size: 0.9rem;
-}
-
 @keyframes start-rise {
   from {
     transform: translateY(10px);
@@ -753,7 +730,7 @@ body {
 
 @media (max-width: 799px) {
   .start-menu {
-    grid-template-columns: 1fr;
+    width: min(360px, calc(100vw - 16px));
   }
 }
 
@@ -978,25 +955,136 @@ body {
   overflow: hidden;
 }
 
-.answer-panel,
+.chat-panel,
 #sources {
+  display: flex;
+  flex-direction: column;
   min-height: 0;
   overflow: hidden;
 }
 
-.answer-panel {
-  display: flex;
-  flex-direction: column;
+.chat-panel {
+  background: rgba(231, 244, 255, 0.72);
 }
 
-.answer-panel .panel-body {
+.chat-log {
   display: flex;
-  flex: 1;
+  flex: 1 1 auto;
   flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  overflow: auto;
+  padding: 14px 14px 8px;
 }
 
-.answer-copy {
-  margin: 12px 0 0;
+.chat-exchange {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chat-row {
+  display: flex;
+  width: 100%;
+}
+
+.chat-row-user {
+  justify-content: flex-end;
+}
+
+.chat-row-gavel {
+  justify-content: flex-start;
+}
+
+.chat-bubble {
+  margin: 0;
+  max-width: 82%;
+  padding: 10px 14px;
+  color: var(--ink);
+  line-height: 1.45;
+}
+
+.chat-bubble-user {
+  border: 1px solid #3b8fc0;
+  border-radius: 16px 16px 6px 16px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0) 46%),
+    linear-gradient(#e9f8ff 0%, #bfe6f7 50%, #9bd9fb 50%, #73c8f8 100%);
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 3px 6px rgba(0, 60, 120, 0.16);
+}
+
+.chat-bubble-gavel {
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  border-radius: 16px 16px 16px 6px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.78));
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 4px 8px rgba(0, 60, 120, 0.12);
+}
+
+.chat-typing {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 58px;
+  min-height: 18px;
+}
+
+.chat-typing span {
+  display: block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 32% 28%, #fff, rgba(255, 255, 255, 0) 36%),
+    radial-gradient(circle at 50% 62%, #d8ffc8, #3cb86a 62%, #0a5c32);
+  box-shadow:
+    inset 0 -2px 2px rgba(0, 40, 80, 0.28),
+    0 1px 2px rgba(0, 60, 120, 0.2);
+  animation: chat-dot 0.9s steps(1, end) infinite;
+}
+
+.chat-typing span:nth-child(2) { animation-delay: 0.18s; }
+.chat-typing span:nth-child(3) { animation-delay: 0.36s; }
+
+@keyframes chat-dot {
+  0%, 40% { transform: translateY(0); }
+  50%, 80% { transform: translateY(-5px); }
+  100% { transform: translateY(0); }
+}
+
+.chat-composer {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 12px 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.8);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.45));
+}
+
+.chat-topics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.chat-topics .topic-chip {
+  min-width: 0;
+  width: 100%;
+  min-height: 30px;
+  padding: 0 6px;
+  font-size: 0.72rem;
+}
+
+.chat-topics .topic-chip .gel-label {
+  min-width: 0;
+  max-width: 100%;
+  gap: 4px;
+  white-space: nowrap;
 }
 
 .brief-slot {
@@ -1007,11 +1095,66 @@ body {
 
 .source-list {
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
   gap: 8px;
   margin-top: 0;
   min-height: 0;
+  overflow: auto;
+}
+
+.source-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 28px;
+  color: var(--ink);
+}
+
+.source-line-text {
+  flex: 1 1 auto;
+  min-width: 0;
   overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 800;
+  font-size: 0.84rem;
+}
+
+.source-line .draft-badge {
+  margin-left: 6px;
+}
+
+.source-line .source-link,
+.source-line .muted {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin-top: 0;
+}
+
+.source-line .source-link,
+.source-line .source-line-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  white-space: normal;
+}
+
+.source-name,
+.source-when {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.source-when {
+  color: var(--ink-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
 }
 
 .source-card.panel {
@@ -1029,13 +1172,14 @@ body {
   margin: 2px 0 0;
   font-size: 0.78rem;
   line-height: 1.2;
-  white-space: nowrap;
 }
 
 .source-link {
   display: block;
   margin-top: 2px;
   line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
   color: var(--link);
   font-size: 0.9rem;
@@ -1103,23 +1247,22 @@ button.source-link {
   }
 
   .split {
-    grid-template-columns: minmax(210px, 0.68fr) minmax(0, 1.9fr);
+    grid-template-columns: minmax(0, 3fr) minmax(150px, 1fr);
     grid-template-rows: minmax(0, 1fr);
   }
 
   .source-list {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    align-items: start;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
     gap: 8px;
+    overflow: auto;
   }
 
   .window-content .window-bar {
     padding: 6px 14px;
   }
 
-  #meetings .panel-body,
-  .answer-panel .panel-body,
   #sources .panel-body {
     padding: 8px 12px 10px;
   }

@@ -195,19 +195,6 @@ export default function Desktop({ children }: { children: ReactNode }) {
           ) : null}
         </ul>
       </div>
-      <aside className="start-side">
-        <h2 className="start-side-title">Meetings</h2>
-        <p className="start-side-copy">Town council meetings and agenda links will appear here.</p>
-        <button
-          type="button"
-          className="gel-btn"
-          onClick={() =>
-            runStart(() => openAnd(() => document.getElementById("meetings")?.scrollIntoView({ block: "nearest" })))
-          }
-        >
-          <span className="gel-label">Open meetings</span>
-        </button>
-      </aside>
     </div>
   );
 
