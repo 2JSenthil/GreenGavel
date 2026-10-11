@@ -1,9 +1,12 @@
 import os
 import re
+from pathlib import Path
+
 import requests
 from dotenv import load_dotenv
 
-load_dotenv()
+PROJECT_ROOT = Path(__file__).resolve().parent
+load_dotenv(PROJECT_ROOT / ".env")
 
 ACCOUNT = os.getenv("SNOWFLAKE_ACCOUNT_IDENTIFIER", "")
 PAT = os.getenv("SNOWFLAKE_PAT")

@@ -6,7 +6,9 @@ node_modules/
 __pycache__/
 *.pyc
 .venv/
+backend/.venv/
 .DS_Store
 backend/data/audio/
+backend/data/answer_cache.json
 data/raw/**/*.pdf
 data/raw/**/*.docx

@@ -2,12 +2,14 @@ type AskBoxProps = {
   question: string;
   onQuestionChange: (value: string) => void;
   onSubmit: () => void;
+  busy?: boolean;
 };
 
 export default function AskBox({
   question,
   onQuestionChange,
   onSubmit,
+  busy = false,
 }: AskBoxProps) {
   const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -25,7 +27,7 @@ export default function AskBox({
         className="ask-input"
         aria-label="Ask what your town is deciding"
       />
-      <button type="submit" className="gel-btn" disabled={!question.trim()}>
+      <button type="submit" className="gel-btn" disabled={busy || !question.trim()}>
         <span className="gel-label">Ask</span>
       </button>
     </form>

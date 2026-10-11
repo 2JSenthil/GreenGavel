@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import SourceCard from "./SourceCard";
+import SourceCard, { uniqueSources } from "./SourceCard";
 
 const API = "";
 const REFUSAL = "The records I have don't say.";
@@ -339,18 +339,18 @@ export default function TalkApp() {
                         onClick={() => patchTurn(turn.id, { sourcesOpen: !turn.sourcesOpen })}
                       >
                         <span className="gel-label">
-                          {turn.sources.length === 1 ? "1 source" : `${turn.sources.length} sources`}
+                          {uniqueSources(turn.sources).length === 1
+                            ? "1 source"
+                            : `${uniqueSources(turn.sources).length} sources`}
                         </span>
                       </button>
                       {turn.sourcesOpen ? (
                         <div className="source-list talk-sources">
-                          {turn.sources.map((source) => (
+                          {uniqueSources(turn.sources).map((source) => (
                             <SourceCard
                               key={source.id}
-                              number={source.id}
                               body={source.body}
                               date={source.date}
-                              page={source.page}
                               status={source.is_draft ? "draft" : "final"}
                               pdfUrl={source.pdf_url}
                             />

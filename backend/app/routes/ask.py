@@ -1,10 +1,12 @@
 import asyncio
 import json
+import time
 import uuid
 
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 
+from app.config import RETRIEVER
 from app.models import AnswerRecord, AskRequest
 from app.services.answer_service import generate_answer, prepare_question
 from app.services.cache import save_answer
@@ -28,10 +30,11 @@ async def ask(request: AskRequest):
             if not question:
                 yield sse_event(
                     "error",
-                    {"message": "Question cannot be empty."}
+                    {"code": "bad_request", "message": "Question cannot be empty."}
                 )
                 return
 
+            started = time.perf_counter()
             kind, prepared = prepare_question(question)
             yield sse_event("route", {"kind": kind})
 
@@ -46,7 +49,6 @@ async def ask(request: AskRequest):
             answer_text = result["text"]
             answer_id = str(uuid.uuid4())
 
-            # Send sources first
             yield sse_event(
                 "sources",
                 {
@@ -57,20 +59,12 @@ async def ask(request: AskRequest):
                 }
             )
 
-            # Stream answer text in chunks
             chunk_size = 35
-
             for i in range(0, len(answer_text), chunk_size):
                 chunk = answer_text[i:i + chunk_size]
-
-                yield sse_event(
-                    "delta",
-                    {"text": chunk}
-                )
-
+                yield sse_event("delta", {"text": chunk})
                 await asyncio.sleep(0.05)
 
-            # Save completed answer
             record = AnswerRecord(
                 answer_id=answer_id,
                 question=question,
@@ -81,9 +75,16 @@ async def ask(request: AskRequest):
 
             save_answer(record)
 
+            elapsed_ms = int((time.perf_counter() - started) * 1000)
             yield sse_event(
                 "done",
-                {"answer_id": answer_id}
+                {
+                    "answer_id": answer_id,
+                    "ok": True,
+                    "refused": answer_text == "The records I have don't say.",
+                    "retriever": RETRIEVER,
+                    "ms": elapsed_ms,
+                }
             )
 
         except asyncio.CancelledError:
@@ -93,9 +94,10 @@ async def ask(request: AskRequest):
             yield sse_event(
                 "error",
                 {
+                    "code": "internal_error",
                     "message": (
                         "Unable to generate an answer. "
-                        "Check demo questions or backend configuration."
+                        "Check the connected data source or backend configuration."
                     )
                 }
             )
