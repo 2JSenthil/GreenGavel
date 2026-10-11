@@ -200,7 +200,8 @@ export default function Desktop({ children }: { children: ReactNode }) {
     event.preventDefault();
     const match = startMatches[0];
     if (!match) return;
-    play("sound" in match && match.sound ? match.sound : "menu");
+    const named = "sound" in match ? match.sound : undefined;
+    play(named === "recycle" ? "recycle" : "menu");
     runStart(match.open);
   }
 
